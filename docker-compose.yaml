@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: .
+      target: final
+    ports:
+      - "8099:8099"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://tg-project:tg-project@db:5438/tg-project
+
+  db:
+    image: postgres:13.4
+    container_name: tg-project
+    environment:
+      POSTGRES_USER: tg-project
+      POSTGRES_PASSWORD: tg-project
+      POSTGRES_DB: tg-project
+    ports:
+      - "5434:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

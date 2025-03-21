@@ -1,1 +1,5 @@
 .env
+.idea
+.bin
+configs/config.json
+configs/service-account-key.json
