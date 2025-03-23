@@ -3,3 +3,4 @@
 .bin
 configs/config.json
 configs/service-account-key.json
+configs/client-key-gg.json
