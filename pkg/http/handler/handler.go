@@ -1,23 +1,30 @@
 package handler
 
 import (
+	"github.com/gin-gonic/gin"
 	usecase "github.com/mickey-mickser/telegram-project/pkg/storage/sheets"
+
 	"github.com/sirupsen/logrus"
-	"net/http"
 )
 
-type Handler interface {
-	Get(w http.ResponseWriter, r *http.Request)
-}
-
-type handler struct {
-	log      logrus.FieldLogger
+type Handler struct {
 	sheetUse usecase.SheetUseCase
+	log      logrus.FieldLogger
 }
 
-func NewHandler(log logrus.FieldLogger, sheetUse usecase.SheetUseCase) Handler {
-	return &handler{
-		log:      log,
+func NewHandler(log logrus.FieldLogger, sheetUse usecase.SheetUseCase) *Handler {
+	return &Handler{
 		sheetUse: sheetUse,
+		log:      log,
 	}
+}
+
+func (h *Handler) InitRoutes() *gin.Engine {
+	router := gin.New()
+	sheets := router.Group("/sheets")
+	{
+		sheets.POST("", h.BatchUpdate)
+	}
+
+	return router
 }

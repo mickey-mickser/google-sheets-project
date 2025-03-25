@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"github.com/mickey-mickser/telegram-project/pkg/clients/sheets"
-	"github.com/mickey-mickser/telegram-project/pkg/clients/telegram"
 	"github.com/mickey-mickser/telegram-project/pkg/config"
 	"github.com/mickey-mickser/telegram-project/pkg/http"
+	"github.com/mickey-mickser/telegram-project/pkg/http/handler"
 	"github.com/mickey-mickser/telegram-project/pkg/storage/sheets"
+	"github.com/sirupsen/logrus"
 	_ "google.golang.org/api/sheets/v4"
 	"os"
 	"os/signal"
@@ -24,24 +25,19 @@ func ctxWithSig() (context.Context, func()) {
 		case <-ch:
 			cancel()
 		}
+
 	}()
 
 	return ctx, cancel
 }
 func main() {
 	cfg, err := config.NewConfig("./configs/config.json")
+
 	if err != nil {
 		panic(err)
 	}
 
 	log := cfg.Log()
-	botCli := cfg.TelegramTokenCli()
-	//dbGorm := cfg.DB()
-	//sqlDB, err := dbGorm.DB()
-	//if err != nil {
-	//	panic(err)
-	//}
-	//sheetId := cfg.GoogleSheetID()
 
 	ctx, cancel := ctxWithSig()
 	defer func() {
@@ -55,14 +51,15 @@ func main() {
 
 	sheetUse := usecase.NewSheetUse(cli)
 
-	botCli.Debug = true
-
 	wg := new(sync.WaitGroup)
-	http.NewHttp(log, sheetUse).Run(ctx, wg)
-	if err := telegram.NewBot(botCli, log).Start(ctx); err != nil {
-		log.Panic(err)
-	}
+	handlers := handler.NewHandler(log, sheetUse)
+	http.NewHttp(log, handlers.InitRoutes()).Run(ctx, wg)
 
+	logrus.Print("Server is running. Press CTRL+C to stop...")
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	<-quit
+
+	logrus.Print("Shutting down server...")
 	wg.Wait()
-
 }

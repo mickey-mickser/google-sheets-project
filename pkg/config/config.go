@@ -2,23 +2,17 @@ package config
 
 import (
 	"encoding/json"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/sirupsen/logrus"
-	"gorm.io/gorm"
 	"os"
 )
 
 type Config interface {
 	Log() *logrus.Logger
-	DB() *gorm.DB
-	TelegramTokenCli() *tgbotapi.BotAPI
 	GoogleSheetID() string
 }
 
 type config struct {
-	db
 	logger
-	tgBotToken
 	googleSheet
 }
 
