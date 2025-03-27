@@ -6,7 +6,7 @@ import (
 	"github.com/mickey-mickser/telegram-project/pkg/config"
 	"github.com/mickey-mickser/telegram-project/pkg/http"
 	"github.com/mickey-mickser/telegram-project/pkg/http/handler"
-	"github.com/mickey-mickser/telegram-project/pkg/storage/sheets"
+	"github.com/mickey-mickser/telegram-project/pkg/usecase/sheets"
 	"github.com/sirupsen/logrus"
 	_ "google.golang.org/api/sheets/v4"
 	"os"

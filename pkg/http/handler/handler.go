@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
-	usecase "github.com/mickey-mickser/telegram-project/pkg/storage/sheets"
+	usecase "github.com/mickey-mickser/telegram-project/pkg/usecase/sheets"
 
 	"github.com/sirupsen/logrus"
 )
