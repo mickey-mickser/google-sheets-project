@@ -31,6 +31,11 @@ func ctxWithSig() (context.Context, func()) {
 	return ctx, cancel
 }
 func main() {
+	//logrus.SetFormatter(new(logrus.JSONFormatter))
+	//if err := godotenv.Load(); err != nil {
+	//	logrus.Fatalf("error loading env variables: %s", err.Error())
+	//}
+
 	cfg, err := config.NewConfig("./configs/config.json")
 
 	if err != nil {

@@ -1,8 +1,10 @@
 package handler
 
 import (
-	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"io"
+	"log"
 	"net/http"
 )
 
@@ -13,18 +15,27 @@ type BatchUpdateRequest struct {
 func (h *Handler) BatchUpdate(c *gin.Context) {
 	sheetId := c.Query("sheet_id")
 	if sheetId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Table parameter is required"})
-		return
-	}
-	var req BatchUpdateRequest
-	if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		errMsg := "Table parameter is required"
+		log.Println("ERROR:", errMsg)
+		c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
 		return
 	}
 
-	res, err := h.sheetUse.BatchUpdate(c.Request.Context(), sheetId, req.Requests)
+	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errMsg := "Invalid request body"
+		log.Println("ERROR:", errMsg, err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
+		return
+	}
+
+	res, err := h.sheetUse.BatchUpdate(c.Request.Context(), sheetId, body)
+	if err != nil {
+		errMsg := fmt.Sprintf("Failed to update the Google Sheet. Error: %v", err)
+		log.Println("ERROR:", errMsg)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
