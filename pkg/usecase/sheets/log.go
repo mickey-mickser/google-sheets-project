@@ -1,13 +1,12 @@
 package usecase
 
 import (
-	"log"
 	"reflect"
 
 	"google.golang.org/api/sheets/v4"
 )
 
-type Request struct {
+type RequestBatchUpdate struct {
 	AddBanding                   *sheets.AddBandingRequest                   `json:"addBanding,omitempty"`
 	AddChart                     *sheets.AddChartRequest                     `json:"addChart,omitempty"`
 	AddConditionalFormatRule     *sheets.AddConditionalFormatRuleRequest     `json:"addConditionalFormatRule,omitempty"`
@@ -76,7 +75,7 @@ type Request struct {
 	UpdateSpreadsheetProperties  *sheets.UpdateSpreadsheetPropertiesRequest  `json:"updateSpreadsheetProperties,omitempty"`
 }
 
-func logRequestTypes(requests []*sheets.Request) {
+func (s *sheetUseCase) logRequestTypes(requests []*sheets.Request) {
 	for _, req := range requests {
 		v := reflect.ValueOf(*req)
 		t := v.Type()
@@ -84,7 +83,7 @@ func logRequestTypes(requests []*sheets.Request) {
 		for i := 0; i < v.NumField(); i++ {
 			field := v.Field(i)
 			if !field.IsNil() {
-				log.Printf("batchUpdate use: %s", t.Field(i).Name)
+				s.log.Printf("batchUpdate use: %s", t.Field(i).Name)
 			}
 		}
 	}

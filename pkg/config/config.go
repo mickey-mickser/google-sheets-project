@@ -8,12 +8,10 @@ import (
 
 type Config interface {
 	Log() *logrus.Logger
-	GoogleSheetID() string
 }
 
 type config struct {
 	logger
-	googleSheet
 }
 
 func NewConfig(cfgPath string) (Config, error) {

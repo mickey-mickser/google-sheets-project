@@ -1,0 +1,163 @@
+info:
+  contact: {}
+paths:
+  /create:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint creates a new table in Google Sheets based on the
+        provided request body
+      parameters:
+      - description: Table Data
+        in: body
+        name: body
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully created table
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request body
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new table in Google Sheets
+      tags:
+      - Sheets
+  /delete:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint deletes data from a specified range in a Google Sheets
+        document
+      parameters:
+      - description: Sheet ID
+        in: query
+        name: sheet_id
+        required: true
+        type: string
+      - description: Range
+        in: query
+        name: range
+        type: string
+      - description: Table Data
+        in: body
+        name: body
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted data
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Missing required parameters
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete data from Google Sheets
+      tags:
+      - Sheets
+  /read:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint retrieves a specified range of data from a Google
+        Sheets document
+      parameters:
+      - description: Sheet ID
+        in: query
+        name: sheet_id
+        required: true
+        type: string
+      - description: Range
+        in: query
+        name: range
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved data
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Missing Sheet ID or invalid parameters
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get data from Google Sheets
+      tags:
+      - Sheets
+  /update:
+    post:
+      consumes:
+      - application/json
+      description: Accepts a list of updates and applies them to the specified Google
+        Sheet.
+      parameters:
+      - description: Google Sheet ID
+        in: query
+        name: sheet_id
+        required: true
+        type: string
+      - description: List of updates, each with 'range' and 'value'
+        in: body
+        name: updates
+        required: true
+        schema:
+          items:
+            additionalProperties:
+              type: string
+            type: object
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success response with status and data
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request with error message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Batch update Google Sheets
+      tags:
+      - Sheets
+swagger: "2.0"

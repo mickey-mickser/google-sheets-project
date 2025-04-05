@@ -1,9 +1,8 @@
-# syntax=docker/dockerfile:1
-
-# Stage for building the application
 ARG GO_VERSION=1.23.6
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION} AS build
-WORKDIR /src
+
+COPY . /github.com/mickey-mickser/google-sheets-poject/
+WORKDIR /github.com/mickey-mickser/google-sheets-poject/
 
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=bind,source=go.sum,target=go.sum \
@@ -11,25 +10,36 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
     go mod download -x
 
 ARG TARGETARCH
-
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=bind,target=. \
-    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/server ./cmd/bot/main.go
+    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/bot ./cmd
 
-# Stage for running the application
-FROM alpine:3.17.2 AS final
+FROM alpine:latest AS final
+WORKDIR /root/
 
-RUN apk add --no-cache \
+COPY --from=build /bin/bot /bin/docker-service
+COPY --from=build /github.com/mickey-mickser/google-sheets-poject/configs /configs
+
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk --update add \
         ca-certificates \
         tzdata \
-    && update-ca-certificates
+        && \
+        update-ca-certificates
 
 ARG UID=10001
-RUN adduser --disabled-password --gecos "" --home "/nonexistent" --shell "/sbin/nologin" --no-create-home --uid "${UID}" appuser
-USER appuser
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    worker
 
-COPY --from=build /bin/server /bin/
 
-EXPOSE 8099
+USER worker
 
-ENTRYPOINT [ "/bin/server" ]
+EXPOSE 8055
+
+ENTRYPOINT ["/bin/docker-service"]
