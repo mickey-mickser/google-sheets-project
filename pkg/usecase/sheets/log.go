@@ -1,11 +1,33 @@
-package usecase
+package sheetUsecase
 
 import (
+	"github.com/mickey-mickser/google-sheets-project/pkg/models"
+	"github.com/sirupsen/logrus"
 	"reflect"
+	"strings"
 
 	"google.golang.org/api/sheets/v4"
 )
 
+const (
+	// RequestTypeAdd represents add operations
+	RequestTypeAdd = "Add"
+	// RequestTypeUpdate represents update operations
+	RequestTypeUpdate = "Update"
+	// RequestTypeDelete represents delete operations
+	RequestTypeDelete = "Delete"
+)
+
+type RequestMetrics struct {
+	TotalRequests  int
+	AddRequests    int
+	UpdateRequests int
+	DeleteRequests int
+	OtherRequests  int
+}
+
+// RequestBatchUpdate represents all possible Google Sheets API batch update operations.
+// Each field corresponds to a specific operation type that can be performed on a spreadsheet.
 type RequestBatchUpdate struct {
 	AddBanding                   *sheets.AddBandingRequest                   `json:"addBanding,omitempty"`
 	AddChart                     *sheets.AddChartRequest                     `json:"addChart,omitempty"`
@@ -75,16 +97,100 @@ type RequestBatchUpdate struct {
 	UpdateSpreadsheetProperties  *sheets.UpdateSpreadsheetPropertiesRequest  `json:"updateSpreadsheetProperties,omitempty"`
 }
 
-func (s *sheetUseCase) logRequestTypes(requests []*sheets.Request) {
-	for _, req := range requests {
-		v := reflect.ValueOf(*req)
+// logRequestTypes logs non-empty fields of each UpdateRequest in the batch for debugging.
+func (s *sheetUseCase) logRequestTypes(requests []models.UpdateRequest) {
+	if len(requests) == 0 {
+		s.log.Debug("No batch update requests to process")
+		return
+	}
+
+	for i, req := range requests {
+		v := reflect.ValueOf(req)
 		t := v.Type()
 
-		for i := 0; i < v.NumField(); i++ {
-			field := v.Field(i)
-			if !field.IsNil() {
-				s.log.Printf("batchUpdate use: %s", t.Field(i).Name)
+		var nonEmptyFields []string
+		for j := 0; j < v.NumField(); j++ {
+			field := v.Field(j)
+			fieldType := t.Field(j)
+			kind := field.Kind()
+
+			switch kind {
+			case reflect.Ptr, reflect.Interface, reflect.Slice, reflect.Map, reflect.Func, reflect.Chan:
+				if !field.IsNil() {
+					nonEmptyFields = append(nonEmptyFields, fieldType.Name)
+				}
+			case reflect.String:
+				if field.String() != "" {
+					nonEmptyFields = append(nonEmptyFields, fieldType.Name)
+				}
+			default:
+				zero := reflect.Zero(field.Type()).Interface()
+				if !reflect.DeepEqual(field.Interface(), zero) {
+					nonEmptyFields = append(nonEmptyFields, fieldType.Name)
+				}
 			}
 		}
+
+		if len(nonEmptyFields) == 0 {
+			s.log.WithFields(logrus.Fields{
+				"request_index": i,
+				"request_count": len(requests),
+			}).Info("Processing batch update request with no set fields")
+		} else {
+			s.log.WithFields(logrus.Fields{
+				"request_index": i,
+				"request_count": len(requests),
+				"request_types": nonEmptyFields,
+			}).Info("Processing batch update request")
+		}
 	}
+}
+
+// GetActiveRequests returns a list of names of those RequestBatchUpdate fields that are not nil (i.e. actually present in the request).
+func (r *RequestBatchUpdate) GetActiveRequests() []string {
+	var active []string
+	v := reflect.ValueOf(r).Elem()
+	t := v.Type()
+
+	for i := 0; i < v.NumField(); i++ {
+		if !v.Field(i).IsNil() {
+			active = append(active, t.Field(i).Name)
+		}
+	}
+	return active
+}
+
+// GetRequestCategory assigns the query name to one of the categories.
+func GetRequestCategory(requestType string) string {
+	switch {
+	case strings.HasPrefix(requestType, RequestTypeAdd):
+		return RequestTypeAdd
+	case strings.HasPrefix(requestType, RequestTypeUpdate):
+		return RequestTypeUpdate
+	case strings.HasPrefix(requestType, RequestTypeDelete):
+		return RequestTypeDelete
+	default:
+		return "Other"
+	}
+}
+
+// CollectMetrics calculates metrics for existing operations.
+func (r *RequestBatchUpdate) CollectMetrics() RequestMetrics {
+	metrics := RequestMetrics{}
+	active := r.GetActiveRequests()
+	metrics.TotalRequests = len(active)
+
+	for _, reqName := range active {
+		switch GetRequestCategory(reqName) {
+		case RequestTypeAdd:
+			metrics.AddRequests++
+		case RequestTypeUpdate:
+			metrics.UpdateRequests++
+		case RequestTypeDelete:
+			metrics.DeleteRequests++
+		default:
+			metrics.OtherRequests++
+		}
+	}
+	return metrics
 }

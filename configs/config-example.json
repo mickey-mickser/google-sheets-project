@@ -1,5 +1,15 @@
 {
   "log": {
     "level": "example"
+  },
+  "server": {
+    "port": "8080"
+  },
+  "permissions": {
+    "path_config": "/example/config.json",
+    "path_service_key": "/example/service-account-key.json",
+    "type": "user",
+    "role": "owner",
+    "email": "example@example.com"
   }
 }

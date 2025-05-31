@@ -56,7 +56,7 @@ Once the service is running, you can interact with it using HTTP clients like cu
 - Build Container: `make build-container`
 
 ## API Endpoints
-
+### Depending on the language you select in Google Sheet, the word "Sheet" in the value of the request body depends
 **POST /create**  
 
 We need to specify the `sheet_id` of the table.
@@ -231,57 +231,63 @@ _Description:_ Accepts a list of updates and applies them to the specified Googl
 
 **Request Example:**
 ```json
+
 {
-  "requests": [
+  "updates": [
     {
-      "updateCells": {
-        "rows": [
-          {
-            "values": [
-              {
-                "userEnteredValue": {
-                  "stringValue": "Hello"
-                }
-              }
-            ]
-          }
-        ],
-        "fields": "userEnteredValue",
-        "start": {
-          "sheetId": 0,
-          "rowIndex": 0,
-          "columnIndex": 0
-        }
-      }
+      "range": "Sheet1!A1:A10",
+      "value": "Hello"
+    },
+    {
+      "range": "Sheet1!B1",
+      "value": "World"
     }
   ]
 }
+
 ```
 _Response Example:_
 ```json
 {
-    "data": {
-        "replies": [
-            {}
-        ],
-        "spreadsheetId": "1qPyWOoR5fXwLEAX10yKrNJsZa0BETGd23L3Yg-T46LM"
-    },
-    "status": "ok"
+  "data": {
+    "responses": [
+      {
+        "spreadsheetId": "1a2b3c4d5e6f7g8h9i0j",
+        "updatedCells": 1,
+        "updatedColumns": 1,
+        "updatedRange": "'Sheet1'!A1",
+        "updatedRows": 1
+      },
+      {
+        "spreadsheetId": "1a2b3c4d5e6f7g8h9i0j",
+        "updatedCells": 1,
+        "updatedColumns": 1,
+        "updatedRange": "'Sheet1'!B1",
+        "updatedRows": 1
+      }
+    ],
+    "spreadsheetId": "1a2b3c4d5e6f7g8h9i0j",
+    "totalUpdatedCells": 2,
+    "totalUpdatedColumns": 2,
+    "totalUpdatedRows": 1,
+    "totalUpdatedSheets": 1
+  },
+  "status": "ok"
 }
 ```
-### POST /delete
+### POST /clearTable
 
 We need to specify the `sheet_id` of the table.
 
 
-Example URL: `http://localhost:8080/delete?sheet_id=1a2b3c4d5e6f7g8h9i0j`
+Example URL: `http://localhost:8080/api/v1/sheets/clearTable?sheet_id=1a2b3c4d5e6f7g8h9i0j`
 
-If the range is not specified, then by <span style="color:red">default</span>
-the entire table will have the parameters: `A1:Z1000`
+If the range is not specified in the JSON body, the default range will be `A1:Z1000`.
+
 
 _Description:_ Deletes values in a specified range from a Google Sheet.
 
-**Request Example:
+**Request Example:**
 ```json
 {
   "range": "A1:C3"
@@ -292,7 +298,7 @@ _Response Example:_
 ```json
 {
     "data": {
-        "clearedRange": "'Лист1'!A1:Z1000",
+        "clearedRange": "'Sheet1'!A1:Z1000",
         "spreadsheetId": "1qPyWOoR5fXwLEAX10yKrNJsZa0BETGd23L3Yg-T46LM"
     },
     "status": "ok"
@@ -310,22 +316,12 @@ Example URL: `http://localhost:8080/read?sheet_id=1a2b3c4d5e6f7g8h9i0j`
 _Response Example:_
 ```json
 {
-  "status": "ok",
-  "data": {
-    "spreadsheetId": "1a2b3c4d5e6f7g8h9i0j",
-    "title": "My Spreadsheet",
-    "sheets": [
-      {
-        "properties": {
-          "title": "Sheet1",
-          "gridProperties": {
-            "rowCount": 1000,
-            "columnCount": 26
-          }
-        }
-      }
+  "data": [
+    [
+      "Example"
     ]
-  }
+  ],
+  "status": "success"
 }
 ```
 

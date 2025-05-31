@@ -8,10 +8,12 @@ import (
 
 type Config interface {
 	Log() *logrus.Logger
+	Permissions() *PermissionsStruct
 }
 
 type config struct {
 	logger
+	permissions
 }
 
 func NewConfig(cfgPath string) (Config, error) {
@@ -19,6 +21,11 @@ func NewConfig(cfgPath string) (Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			logrus.Error(err)
+		}
+	}()
 	cfg := config{}
 	if err = json.NewDecoder(file).Decode(&cfg); err != nil {
 		return nil, err

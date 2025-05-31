@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	mockusecase "github.com/mickey-mickser/google-sheets-project/pkg/usecase/sheets/mocks"
+	mockusecase "github.com/mickey-mickser/google-sheets-project/pkg/mocks"
+	"github.com/mickey-mickser/google-sheets-project/pkg/models"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/sheets/v4"
@@ -39,7 +40,7 @@ func TestHandler_Create(t *testing.T) {
 	}{
 		{
 			name:           "Success",
-			body:           `{"sheet_name": "Sheet1"}`,
+			body:           `{"properties": {"title": "Sheet1"}}`,
 			mockReturn:     &sheets.Spreadsheet{},
 			mockError:      nil,
 			expectedStatus: http.StatusOK,
@@ -50,23 +51,30 @@ func TestHandler_Create(t *testing.T) {
 			body:           `{invalid json}`,
 			mockReturn:     nil,
 			mockError:      fmt.Errorf("failed to unmarshal createRequest body: invalid character 'i' looking for beginning of value"),
-			expectedStatus: http.StatusInternalServerError,
-			expectedBody:   `{"error":"failed to unmarshal createRequest body: invalid character 'i' looking for beginning of value"}`,
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   `{"code":"006", "detail":"invalid character 'i' looking for beginning of object key string"}`,
 		},
 		{
 			name:           "Failed to create table",
-			body:           `{"sheet_name": "Sheet1"}`,
+			body:           `{"properties": {"title": "Sheet1"}}`,
 			mockReturn:     nil,
 			mockError:      fmt.Errorf("creation error"),
 			expectedStatus: http.StatusInternalServerError,
-			expectedBody:   `{"error":"creation error"}`,
+			expectedBody:   `{"code":"000", "detail":"Something bad happened"}`,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockUseCase.EXPECT().
-				Create(gomock.Any(), []byte(tt.body)).
-				Return(tt.mockReturn, tt.mockError)
+			if tt.name != "Invalid request body" {
+				mockUseCase.
+					EXPECT().
+					Create(gomock.Any(), models.CreateRequest{
+						Properties: models.Properties{
+							Title: "Sheet1",
+						},
+					}).
+					Return(tt.mockReturn, tt.mockError)
+			}
 
 			req := httptest.NewRequest(http.MethodPost, "/create", strings.NewReader(tt.body))
 			w := httptest.NewRecorder()
@@ -76,4 +84,5 @@ func TestHandler_Create(t *testing.T) {
 			assert.JSONEq(t, tt.expectedBody, w.Body.String())
 		})
 	}
+
 }

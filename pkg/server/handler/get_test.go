@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	mockusecase "github.com/mickey-mickser/google-sheets-project/pkg/usecase/sheets/mocks"
+	mockusecase "github.com/mickey-mickser/google-sheets-project/pkg/mocks"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -35,7 +35,7 @@ func TestHandler_Get(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Contains(t, w.Body.String(), "ok")
+		assert.Contains(t, w.Body.String(), `"status":"success"`)
 	})
 
 	t.Run("Missing sheet_id", func(t *testing.T) {
@@ -44,7 +44,7 @@ func TestHandler_Get(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.Contains(t, w.Body.String(), "Sheet ID parameter is required")
+		assert.Contains(t, w.Body.String(), "sheet_id is required")
 	})
 
 	t.Run("Google Sheets error", func(t *testing.T) {
@@ -55,6 +55,6 @@ func TestHandler_Get(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
-		assert.Contains(t, w.Body.String(), "service error")
+		assert.Contains(t, w.Body.String(), "Something bad happened")
 	})
 }

@@ -1,12 +1,31 @@
+// @title Google Sheets API
+// @version 1.0
+// @description This is a sample API for Google Sheets interaction
+// @termsOfService http://example.com/terms/
+
+// @contact.name Your Name
+// @contact.url http://www.example.com
+// @contact.email example@example.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /api/v1
+// @schemes http
 package main
 
 import (
 	"context"
+	"github.com/joho/godotenv"
+	_ "github.com/mickey-mickser/google-sheets-project/cmd/docs"
 	"github.com/mickey-mickser/google-sheets-project/pkg/clients/sheets"
 	"github.com/mickey-mickser/google-sheets-project/pkg/config"
-	"github.com/mickey-mickser/google-sheets-project/pkg/http"
-	"github.com/mickey-mickser/google-sheets-project/pkg/http/handler"
-	"github.com/mickey-mickser/google-sheets-project/pkg/usecase/sheets"
+	"github.com/mickey-mickser/google-sheets-project/pkg/server"
+	"github.com/mickey-mickser/google-sheets-project/pkg/server/handler"
+	"github.com/sirupsen/logrus"
+	//swaggerFiles "github.com/swaggo/files"
+	//ginSwagger "github.com/swaggo/gin-swagger"
 	_ "google.golang.org/api/sheets/v4"
 	"os"
 	"os/signal"
@@ -14,6 +33,7 @@ import (
 	"syscall"
 )
 
+// Setup context with graceful shutdown
 func ctxWithSig() (context.Context, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 	ch := make(chan os.Signal, 1)
@@ -30,21 +50,21 @@ func ctxWithSig() (context.Context, func()) {
 	return ctx, cancel
 }
 func main() {
-
-	var configPath string
-	if _, err := os.Stat("/configs/config.json"); err == nil {
-		configPath = "/configs/config.json"
-	} else {
-		configPath = "./configs/config.json"
+	if err := godotenv.Load(); err != nil {
+		logrus.Fatalf("error loading env variables: %s", err.Error())
 	}
 
+	configPath := os.Getenv("CONFIG_PATH")
+	if _, err := os.Stat(configPath); err != nil {
+		configPath = "." + configPath
+	}
 	cfg, err := config.NewConfig(configPath)
 	if err != nil {
 		panic(err)
 	}
 
 	log := cfg.Log()
-
+	permission := cfg.Permissions()
 	ctx, cancel := ctxWithSig()
 	defer func() {
 		if err := recover(); err != nil {
@@ -53,14 +73,18 @@ func main() {
 		}
 	}()
 
-	cli := sheets.NewSheets(ctx).CliSheets()
+	// Initialize services
+	cli, err := sheets.NewSheets(ctx).CliSheets(permission.ServiceKeyPath)
+	if err != nil {
+		panic(err)
+	}
+	handlers := handler.NewHandler(log, cli, permission)
 
-	sheetUse := usecase.NewSheetUse(cli, log)
-
+	//Block main() until all background goroutines (like the server) complete
 	wg := new(sync.WaitGroup)
 
-	handlers := handler.NewHandler(log, sheetUse)
-	http.NewHttp(log, handlers.InitRoutes()).Run(ctx, wg)
+	// Run server with graceful shutdown
+	server.NewServer(log, os.Getenv("PORT"), handlers.InitRoutes()).Run(ctx, wg)
 
 	wg.Wait()
 }

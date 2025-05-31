@@ -1,4 +1,4 @@
-.PHONY:
+.PHONY: build run build-container test
 .SILENT:
 
 build:
