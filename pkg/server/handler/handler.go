@@ -9,7 +9,10 @@ import (
 	"github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/sheets/v4"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -21,13 +24,17 @@ const (
 	handlerNameClearTable  = "ClearTable"
 	handlerNameCreateTable = "CreateTable"
 	handlerNameGet         = "Get"
+	handlerNameShare       = "Share"
+	handlerCapabilities    = "Capabilities"
 
-	errMissingSheetID = "Sheet ID parameter is required"
-	errInvalidBody    = "Invalid request body"
-	errUpdateFailed   = "Failed to update the Google Sheets"
-	errDeleteFailed   = "Failed to delete data from Google Sheets"
-	errCreateFailed   = "Failed to create tables in Google Sheets"
-	errGetFailed      = "Failed to get from Google Sheets"
+	errMissingSheetID  = "Sheet ID parameter is required"
+	errInvalidBody     = "Invalid request body"
+	errUpdateFailed    = "Failed to update the Google Sheets"
+	errDeleteFailed    = "Failed to delete data from Google Sheets"
+	errCreateFailed    = "Failed to create tables in Google Sheets"
+	errGetFailed       = "Failed to get from Google Sheets"
+	errShareFailed     = "Failed to share permission foe reading Google Sheets"
+	errGetCapabilities = "Failed to get Capabilities from Google Sheets UseCase"
 )
 
 type Handler struct {
@@ -37,7 +44,7 @@ type Handler struct {
 }
 
 // NewHandler initializes the HTTP handler with dependencies and CORS settings
-func NewHandler(log *logrus.Logger, cli *sheets.Service, permission *config.PermissionsStruct) *Handler {
+func NewHandler(log *logrus.Logger, sheetSrv *sheets.Service, driveSvc *drive.Service, permission *config.PermissionsStruct) *Handler {
 	// Read allowed origins from environment variable, comma-separated; default to wildcard
 	origEnv := os.Getenv("ALLOWED_ORIGINS")
 	var allowed []string
@@ -52,7 +59,7 @@ func NewHandler(log *logrus.Logger, cli *sheets.Service, permission *config.Perm
 		}
 	}
 
-	sheetUse := sheetUsecase.NewSheetUse(cli, log, permission)
+	sheetUse := sheetUsecase.NewSheetUse(sheetSrv, driveSvc, log, permission)
 
 	return &Handler{
 		SheetUse:       sheetUse,
@@ -82,10 +89,39 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	router.GET("/health", h.healthCheck)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	router.GET("/debug/metadata/email", func(c *gin.Context) {
+		req, _ := http.NewRequest("GET",
+			"http://metadata/computeMetadata/v1/instance/service-accounts/default/email", nil)
+		req.Header.Add("Metadata-Flavor", "Google")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		defer resp.Body.Close()
+		body, _ := io.ReadAll(resp.Body)
+		c.String(resp.StatusCode, string(body))
+	})
+
+	router.GET("/debug/metadata/token", func(c *gin.Context) {
+		req, _ := http.NewRequest("GET",
+			"http://metadata/computeMetadata/v1/instance/service-accounts/default/token", nil)
+		req.Header.Add("Metadata-Flavor", "Google")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		defer resp.Body.Close()
+		body, _ := io.ReadAll(resp.Body)
+		c.Data(resp.StatusCode, "application/json", body)
+	})
+
 	api := router.Group("/api/v1")
 	{
 		s := api.Group("/sheets")
 		{
+			s.POST("/share", h.Share)
 			s.POST("/update", h.BatchUpdate)
 			s.GET("/read", h.Get)
 			s.POST("/create", h.Create)

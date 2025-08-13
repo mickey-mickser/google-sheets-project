@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/mickey-mickser/google-sheets-project/pkg/models"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -109,13 +109,21 @@ func (s *sheetUseCase) grantSheetAccess(ctx context.Context, sheetID string) err
 }
 
 func (r *realPermissionSetter) SetPermission(ctx context.Context, sheetID string) error {
-	credPath := r.CredPath
-	if _, err := os.Stat(credPath); err != nil {
-		credPath = "." + credPath
-	}
-	srv, err := drive.NewService(ctx, option.WithCredentialsFile(credPath))
+	//credPath := r.CredPath
+	//if _, err := os.Stat(credPath); err != nil {
+	//	credPath = "." + credPath
+	//}
+	creds, err := google.FindDefaultCredentials(ctx, drive.DriveScope)
 	if err != nil {
-		return fmt.Errorf("failed to create Google Drive client: %w", err)
+		return fmt.Errorf("find default credentials for Drive: %w", err)
+	}
+
+	srv, err := drive.NewService(ctx,
+		option.WithTokenSource(creds.TokenSource),
+		option.WithScopes(drive.DriveScope),
+	)
+	if err != nil {
+		return fmt.Errorf("new drive service: %w", err)
 	}
 
 	perm := &drive.Permission{
@@ -124,7 +132,7 @@ func (r *realPermissionSetter) SetPermission(ctx context.Context, sheetID string
 		EmailAddress: r.EmailAddress,
 	}
 
-	_, err = srv.Permissions.Create(sheetID, perm).Context(ctx).Do()
+	_, err = srv.Permissions.Create(sheetID, perm).Context(ctx).SupportsAllDrives(true).Do()
 	if err != nil {
 		return fmt.Errorf("failed to set permission: %w", err)
 	}

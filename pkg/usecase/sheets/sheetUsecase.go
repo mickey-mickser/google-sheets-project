@@ -6,6 +6,8 @@ import (
 	"github.com/mickey-mickser/google-sheets-project/pkg/config"
 	"github.com/mickey-mickser/google-sheets-project/pkg/models"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/sheets/v4"
 )
 
@@ -36,21 +38,24 @@ type SheetUseCase interface {
 	Create(ctx context.Context, body models.CreateRequest) (*sheets.Spreadsheet, error)
 	Delete(ctx context.Context, sheetId, param string) (*sheets.ClearValuesResponse, error)
 	SetPermissionSetter(ps PermissionSetter) // SetPermissionSetter allows replacing the PermissionSetter. Mainly intended for tests and mocking.
+	SharePermission(ctx context.Context, body models.ShareRequest) (*drive.Permission, error)
 }
 
 // sheetUseCase is the actual implementation of SheetUseCase.
 // Stores the Google Sheets service, logger, permissions configs, and the current PermissionSetter.
 type sheetUseCase struct {
 	cli        *sheets.Service
+	driveSvc   *drive.Service
 	log        *logrus.Logger
 	permission *config.PermissionsStruct
 	permSetter PermissionSetter
 }
 
 // NewSheetUse initializes a new SheetUseCase
-func NewSheetUse(cli *sheets.Service, log *logrus.Logger, permission *config.PermissionsStruct) SheetUseCase {
+func NewSheetUse(cli *sheets.Service, driveSvc *drive.Service, log *logrus.Logger, permission *config.PermissionsStruct) SheetUseCase {
 	return &sheetUseCase{
 		cli:        cli,
+		driveSvc:   driveSvc,
 		log:        log,
 		permission: permission,
 		permSetter: &realPermissionSetter{
@@ -125,15 +130,55 @@ func (s *sheetUseCase) Create(ctx context.Context, body models.CreateRequest) (*
 			Title: body.Properties.Title,
 		},
 	}
-
-	resp, err := s.cli.Spreadsheets.Create(&createRequest).Context(ctx).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error creating table in Google Sheets: %w", err)
-	}
-	err = s.grantSheetAccess(ctx, resp.SpreadsheetId)
+	err := s.grantSheetAccess(ctx, "1qPyWOoR5fXwLEAX10yKrNJsZa0BETGd23L3Yg-T46LM")
 	if err != nil {
 		return nil, fmt.Errorf("failed to set permissions: %w", err)
 	}
+
+	resp, err := s.cli.Spreadsheets.Create(&createRequest).Context(ctx).Do()
+	if err != nil {
+		if gErr, ok := err.(*googleapi.Error); ok {
+			logrus.Errorf("Sheets API error: code=%d, body=%s", gErr.Code, gErr.Body)
+		}
+		return nil, fmt.Errorf("create usecase: error creating table in Google Sheets: %w", err)
+	}
 	s.log.Printf("Table created: %s\n", resp.SpreadsheetUrl)
 	return resp, nil
+}
+
+// SharePermission grants reader access to a sheet for the given email.
+func (s *sheetUseCase) SharePermission(ctx context.Context, body models.ShareRequest) (*drive.Permission, error) {
+	if body.Email == "" {
+		return nil, fmt.Errorf("email is required")
+	}
+
+	perm := &drive.Permission{
+		Type:         "user",
+		Role:         "reader",
+		EmailAddress: body.Email,
+	}
+
+	call := s.driveSvc.Permissions.
+		Create("1qPyWOoR5fXwLEAX10yKrNJsZa0BETGd23L3Yg-T46LM", perm).
+		SupportsAllDrives(true).
+		Fields("id").
+		Context(ctx)
+
+	if body.SendEmail {
+		call = call.SendNotificationEmail(true)
+		if body.EmailMessage != "" {
+			call = call.EmailMessage(body.EmailMessage)
+		}
+	} else {
+		call = call.SendNotificationEmail(false)
+	}
+
+	p, err := call.Do()
+	if err != nil {
+		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == 409 {
+			return &drive.Permission{Id: ""}, nil
+		}
+		return nil, err
+	}
+	return p, nil
 }

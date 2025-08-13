@@ -20,3 +20,9 @@ type CreateRequest struct {
 type DeleteRequest struct {
 	Range string `json:"range"`
 }
+
+type ShareRequest struct {
+	Email        string `json:"email"`
+	SendEmail    bool   `json:"sendEmail,omitempty"`
+	EmailMessage string `json:"emailMessage,omitempty"`
+}

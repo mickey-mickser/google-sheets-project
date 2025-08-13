@@ -6,7 +6,7 @@ services:
     build:
       context: .
     ports:
-      - "8055:8055"
+      - "8080:8080"
     volumes:
       - ./configs:/config
     networks:

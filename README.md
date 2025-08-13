@@ -59,7 +59,7 @@ Once the service is running, you can interact with it using HTTP clients like cu
 ### Depending on the language you select in Google Sheet, the word "Sheet" in the value of the request body depends
 **POST /create**  
 
-We need to specify the `sheet_id` of the table.
+We need to specify the `sheet_id` of the table. ??????????????
 
 Example URL: `http://localhost:8080/create`
 
@@ -416,3 +416,16 @@ or, if using docker-compose:
 sudo docker exec -it sheets-service /bin/sh
 ```
 
+Развёртывание в Cloud Run с Workload Identity
+   При деплое Cloud Run укажите этот сервис-аккаунт — тогда внутри 
+контейнера автоматически будет доступен токен SA через метаданные:
+
+
+gcloud run deploy sheets-service \
+--image gcr.io/PROJECT_ID/sheets-image \
+--region europe-north1 \
+--service-account sheets-runner@PROJECT_ID.iam.gserviceaccount.com \
+--allow-unauthenticated
+
+С этого момента любой код, запущенный в вашем контейнере,
+может обращаться к Sheets API по принципу Application Default Credentials — без ключей JSON.

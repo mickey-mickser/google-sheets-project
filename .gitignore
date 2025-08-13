@@ -1,6 +1,11 @@
 .env
-.idea
-.bin
-configs/config.json
+.idea/
+.bin/
 configs/service-account-key.json
-vendor
+vendor/
+.git/
+*.log
+logs/
+tmp/
+*.swp
+*~

@@ -1,25 +1,17 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/mickey-mickser/google-sheets-project/pkg/models"
 	"github.com/mickey-mickser/google-sheets-project/pkg/server/responses"
 	"github.com/sirupsen/logrus"
 )
 
-// BatchUpdate updates values in a Google Sheet.
-// @Summary Batch update Google Sheets
-// @Description Accepts a list of updates and applies them to the specified Google Sheet.
-// @Tags Sheets
-// @Accept json
-// @Produce json
-// @Param sheet_id query string true "Google Sheet ID"
-// @Param request body models.BatchUpdateRequest true "List of updates..."
-// @Success 200 {object} responses.BatchUpdateValuesResponse "Success response with status and data"
-// @Failure 400 {object} responses.ResponseError "Bad request with error message"
-// @Failure 500 {object} responses.ResponseError "Internal server error"
-// @Router /api/v1/sheets/update [post]
+// BatchUpdate updates values in a Google Sheet with explicit error details on failure.
 func (h *Handler) BatchUpdate(c *gin.Context) {
+	// Retrieve sheet ID from query
 	sheetId := c.Query("sheet_id")
 	if sheetId == "" {
 		h.Log.WithField("handler", handlerNameBatchUpdate).Error(errMissingSheetID)
@@ -27,9 +19,9 @@ func (h *Handler) BatchUpdate(c *gin.Context) {
 		return
 	}
 
+	// Bind JSON request
 	var req models.BatchUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-
 		h.Log.WithFields(logrus.Fields{
 			"handler": handlerNameBatchUpdate,
 			"error":   err,
@@ -38,15 +30,22 @@ func (h *Handler) BatchUpdate(c *gin.Context) {
 		return
 	}
 
+	// Execute batch update
 	resp, err := h.SheetUse.BatchUpdate(c.Request.Context(), sheetId, req.Updates)
 	if err != nil {
 		h.Log.WithFields(logrus.Fields{
 			"handler": handlerNameBatchUpdate,
 			"error":   err,
 		}).Error(errUpdateFailed)
-		responses.InternalError(c)
+
+		// Return explicit error details in the response
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   err.Error(),
+			"message": errUpdateFailed,
+		})
 		return
 	}
-	responses.OK(c, gin.H{"status": "ok", "data": resp})
 
+	// Success response
+	responses.OK(c, gin.H{"status": "ok", "data": resp})
 }

@@ -24,8 +24,6 @@ import (
 	"github.com/mickey-mickser/google-sheets-project/pkg/server"
 	"github.com/mickey-mickser/google-sheets-project/pkg/server/handler"
 	"github.com/sirupsen/logrus"
-	//swaggerFiles "github.com/swaggo/files"
-	//ginSwagger "github.com/swaggo/gin-swagger"
 	_ "google.golang.org/api/sheets/v4"
 	"os"
 	"os/signal"
@@ -50,18 +48,37 @@ func ctxWithSig() (context.Context, func()) {
 	return ctx, cancel
 }
 func main() {
-	if err := godotenv.Load(); err != nil {
-		logrus.Fatalf("error loading env variables: %s", err.Error())
-	}
-
-	configPath := os.Getenv("CONFIG_PATH")
-	if _, err := os.Stat(configPath); err != nil {
-		configPath = "." + configPath
-	}
-	cfg, err := config.NewConfig(configPath)
+	//if _, err := os.Stat(".env"); err == nil {
+	//	if err := godotenv.Load(); err != nil {
+	//		log.Printf("warning: failed to load .env: %v", err)
+	//	}
+	//} else {
+	//	log.Println("note: .env file not found, skipping godotenv")
+	//}
+	_ = godotenv.Load()
+	cfg, err := config.NewConfig(os.Getenv("CONFIG_PATH"))
 	if err != nil {
-		panic(err)
+		logrus.Fatalf("cannot load config: %v", err)
 	}
+	// asdasd
+	//if err := godotenv.Load(); err != nil {
+	//	logrus.Fatalf("error loading env variables: %s", err.Error())
+	//}
+	//configPath := os.Getenv("CONFIG_PATH") // "/configs/config.json"
+	//cfg, err := config.NewConfig(configPath)
+	//if err != nil {
+	//	log.Fatalf("cannot load config %s: %v", configPath, err)
+	//}
+
+	//asd
+	//configPath := os.Getenv("CONFIG_PATH") // "/configs/config.json"
+	//if _, err := os.Stat(configPath); err != nil {
+	//	configPath = "." + configPath
+	//}
+	//cfg, err := config.NewConfig(configPath)
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	log := cfg.Log()
 	permission := cfg.Permissions()
@@ -74,11 +91,18 @@ func main() {
 	}()
 
 	// Initialize services
-	cli, err := sheets.NewSheets(ctx).CliSheets(permission.ServiceKeyPath)
-	if err != nil {
-		panic(err)
+	sheetCli := sheets.NewSheet(log)
+
+	if err := sheetCli.CliSheetsADC(ctx, "1qPyWOoR5fXwLEAX10yKrNJsZa0BETGd23L3Yg-T46LM"); err != nil {
+		logrus.Fatalf("failed to init Sheets client: %v", err)
 	}
-	handlers := handler.NewHandler(log, cli, permission)
+	sheetSvc := sheetCli.ServiceSheets()
+	driveSvc := sheetCli.ServiceDrive()
+	//cli, err := sheets.NewSheets(ctx).CliSheets(permission.ServiceKeyPath)
+	//if err != nil {
+	//	panic(err)
+	//}
+	handlers := handler.NewHandler(log, sheetSvc, driveSvc, permission)
 
 	//Block main() until all background goroutines (like the server) complete
 	wg := new(sync.WaitGroup)
