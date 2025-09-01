@@ -11,6 +11,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	models "github.com/mickey-mickser/google-sheets-project/pkg/models"
 	sheetUsecase "github.com/mickey-mickser/google-sheets-project/pkg/usecase/sheets"
+	drive "google.golang.org/api/drive/v3"
 	sheets "google.golang.org/api/sheets/v4"
 )
 
@@ -144,4 +145,19 @@ func (m *MockSheetUseCase) SetPermissionSetter(ps sheetUsecase.PermissionSetter)
 func (mr *MockSheetUseCaseMockRecorder) SetPermissionSetter(ps interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPermissionSetter", reflect.TypeOf((*MockSheetUseCase)(nil).SetPermissionSetter), ps)
+}
+
+// SharePermission mocks base method.
+func (m *MockSheetUseCase) SharePermission(ctx context.Context, body models.ShareRequest) (*drive.Permission, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SharePermission", ctx, body)
+	ret0, _ := ret[0].(*drive.Permission)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SharePermission indicates an expected call of SharePermission.
+func (mr *MockSheetUseCaseMockRecorder) SharePermission(ctx, body interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SharePermission", reflect.TypeOf((*MockSheetUseCase)(nil).SharePermission), ctx, body)
 }

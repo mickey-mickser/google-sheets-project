@@ -9,3 +9,5 @@ logs/
 tmp/
 *.swp
 *~
+perms.json
+policy.json

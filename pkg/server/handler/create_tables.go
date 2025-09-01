@@ -5,7 +5,6 @@ import (
 	"github.com/mickey-mickser/google-sheets-project/pkg/models"
 	"github.com/mickey-mickser/google-sheets-project/pkg/server/responses"
 	"github.com/sirupsen/logrus"
-	"net/http"
 )
 
 // Create handles the request to create a new table in Google Sheets
@@ -41,10 +40,6 @@ func (h *Handler) Create(c *gin.Context) {
 			"handler": handlerNameCreateTable,
 			"error":   err.Error(),
 		}).Error(errCreateFailed)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"detail": err.Error(),
-			"code":   "002",
-		})
 		responses.InternalError(c)
 		return
 	}

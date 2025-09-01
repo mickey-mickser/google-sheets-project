@@ -44,7 +44,7 @@ type Handler struct {
 }
 
 // NewHandler initializes the HTTP handler with dependencies and CORS settings
-func NewHandler(log *logrus.Logger, sheetSrv *sheets.Service, driveSvc *drive.Service, permission *config.PermissionsStruct) *Handler {
+func NewHandler(log *logrus.Logger, sheetSrv *sheets.Service, driveSvc *drive.Service, permission *config.PermissionsStruct, sheetID string) *Handler {
 	// Read allowed origins from environment variable, comma-separated; default to wildcard
 	origEnv := os.Getenv("ALLOWED_ORIGINS")
 	var allowed []string
@@ -59,7 +59,7 @@ func NewHandler(log *logrus.Logger, sheetSrv *sheets.Service, driveSvc *drive.Se
 		}
 	}
 
-	sheetUse := sheetUsecase.NewSheetUse(sheetSrv, driveSvc, log, permission)
+	sheetUse := sheetUsecase.NewSheetUse(sheetSrv, driveSvc, log, permission, sheetID)
 
 	return &Handler{
 		SheetUse:       sheetUse,
@@ -126,7 +126,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			s.GET("/read", h.Get)
 			s.POST("/create", h.Create)
 			s.POST("/clearTable", h.ClearTable)
-
+			s.GET("/capabilities", h.Capabilities)
 		}
 	}
 	return router

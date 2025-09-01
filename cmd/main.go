@@ -55,12 +55,13 @@ func main() {
 	//} else {
 	//	log.Println("note: .env file not found, skipping godotenv")
 	//}
-	_ = godotenv.Load()
+	if err := godotenv.Load(); err != nil {
+		logrus.Fatalf("cannot load .env: %v", err)
+	}
 	cfg, err := config.NewConfig(os.Getenv("CONFIG_PATH"))
 	if err != nil {
 		logrus.Fatalf("cannot load config: %v", err)
 	}
-	// asdasd
 	//if err := godotenv.Load(); err != nil {
 	//	logrus.Fatalf("error loading env variables: %s", err.Error())
 	//}
@@ -70,7 +71,6 @@ func main() {
 	//	log.Fatalf("cannot load config %s: %v", configPath, err)
 	//}
 
-	//asd
 	//configPath := os.Getenv("CONFIG_PATH") // "/configs/config.json"
 	//if _, err := os.Stat(configPath); err != nil {
 	//	configPath = "." + configPath
@@ -91,18 +91,16 @@ func main() {
 	}()
 
 	// Initialize services
-	sheetCli := sheets.NewSheet(log)
+	sheetCli := sheets.NewClients(log)
 
-	if err := sheetCli.CliSheetsADC(ctx, "1qPyWOoR5fXwLEAX10yKrNJsZa0BETGd23L3Yg-T46LM"); err != nil {
+	if err := sheetCli.CliSheetsADC(ctx); err != nil {
 		logrus.Fatalf("failed to init Sheets client: %v", err)
 	}
+
 	sheetSvc := sheetCli.ServiceSheets()
 	driveSvc := sheetCli.ServiceDrive()
-	//cli, err := sheets.NewSheets(ctx).CliSheets(permission.ServiceKeyPath)
-	//if err != nil {
-	//	panic(err)
-	//}
-	handlers := handler.NewHandler(log, sheetSvc, driveSvc, permission)
+
+	handlers := handler.NewHandler(log, sheetSvc, driveSvc, permission, cfg.Sheet().SheetID)
 
 	//Block main() until all background goroutines (like the server) complete
 	wg := new(sync.WaitGroup)

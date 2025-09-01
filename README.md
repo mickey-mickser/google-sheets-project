@@ -227,7 +227,7 @@ We need to specify the `sheet_id` of the table.
 Example URL: `http://localhost:8080/update?sheet_id=1a2b3c4d5e6f7g8h9i0j`
 
 
-_Description:_ Accepts a list of updates and applies them to the specified Google Sheet.
+_Description:_ Updates the cell or range of the table to the specified values.
 
 **Request Example:**
 ```json
@@ -299,7 +299,7 @@ _Response Example:_
 {
     "data": {
         "clearedRange": "'Sheet1'!A1:Z1000",
-        "spreadsheetId": "1qPyWOoR5fXwLEAX10yKrNJsZa0BETGd23L3Yg-T46LM"
+        "spreadsheetId": "1qPyWOoR5fX..."
     },
     "status": "ok"
 }
@@ -308,6 +308,8 @@ _Response Example:_
 ### GET /read
 
 We need to specify the `sheet_id` of the table.
+
+_Description:_ Returns the specified cell range from a Google Sheet.
 
 
 Example URL: `http://localhost:8080/read?sheet_id=1a2b3c4d5e6f7g8h9i0j`
@@ -322,6 +324,49 @@ _Response Example:_
     ]
   ],
   "status": "success"
+}
+```
+
+### POST /share
+
+No sheet_id required. Body only.
+
+_Description:_ Grants read access to a specific user by email.
+
+
+Example URL: `http://localhost:8080/api/v1/sheets/share`
+
+**Request Example:**
+```json
+{
+  "email": "user@example.com",
+  "sendEmail": true,
+  "emailMessage": "You now have read access"
+}
+```
+
+_Response Example:_
+```json
+{
+  "status": "ok",
+  "data": { "id": "permission-id" }
+}
+```
+
+### GET /capabilities
+
+No sheet_id required. Body only.
+
+_Description:_ Return of capabilities and description, requests and response of sheets-service.
+
+
+Example URL: `http://localhost:8080/api/v1/sheets/capabilities`
+
+
+_Response Example:_
+```json
+{
+  "capabilities": "json from file"
 }
 ```
 
@@ -416,16 +461,3 @@ or, if using docker-compose:
 sudo docker exec -it sheets-service /bin/sh
 ```
 
-Развёртывание в Cloud Run с Workload Identity
-   При деплое Cloud Run укажите этот сервис-аккаунт — тогда внутри 
-контейнера автоматически будет доступен токен SA через метаданные:
-
-
-gcloud run deploy sheets-service \
---image gcr.io/PROJECT_ID/sheets-image \
---region europe-north1 \
---service-account sheets-runner@PROJECT_ID.iam.gserviceaccount.com \
---allow-unauthenticated
-
-С этого момента любой код, запущенный в вашем контейнере,
-может обращаться к Sheets API по принципу Application Default Credentials — без ключей JSON.

@@ -1,7 +1,8 @@
-package sheetUsecase_test
+package sheetUsecase
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -9,153 +10,270 @@ import (
 
 	"github.com/mickey-mickser/google-sheets-project/pkg/config"
 	"github.com/mickey-mickser/google-sheets-project/pkg/models"
-	"github.com/mickey-mickser/google-sheets-project/pkg/usecase/sheets"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 )
 
-// newTestServer returns httptest.Server emulating Google Sheets API
+// --------- test http server, эмулирующий Google APIs ---------
+
 func newTestServer(t *testing.T) *httptest.Server {
+	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		switch {
-		// Emulate batchUpdate request
-		case r.URL.Path == "/v4/spreadsheets/spreadsheetId/values:batchUpdate":
-			w.Header().Set("Content-Type", "application/json")
-			if _, err := w.Write([]byte(`{"spreadsheetId":"spreadsheetId","totalUpdatedCells":1}`)); err != nil {
-				t.Errorf("failed to write response: %v", err)
-			}
-			t.Logf("Request: %s %s", r.Method, r.URL.Path)
-		// Emulate getting values ​​from a sheet range
-		case r.URL.Path == "/v4/spreadsheets/spreadsheetId/values/A1:Z1000":
-			w.Header().Set("Content-Type", "application/json")
-			if _, err := w.Write([]byte(`{"range":"A1:Z1000","values":[["val1"],["val2"]]}`)); err != nil {
-				t.Errorf("failed to write response: %v", err)
-			}
-			t.Logf("Request: %s %s", r.Method, r.URL.Path)
-		// Emulate clearing a range of values
-		case r.URL.Path == "/v4/spreadsheets/spreadsheetId/values/A1:Z1000:clear":
-			w.Header().Set("Content-Type", "application/json")
-			if _, err := w.Write([]byte(`{"clearedRange":"A1:Z1000"}`)); err != nil {
-				t.Errorf("failed to write response: %v", err)
-			}
-			t.Logf("Request: %s %s", r.Method, r.URL.Path)
-		// Emulate creating a new spreadsheet
-		case r.URL.Path == "/v4/spreadsheets":
-			w.Header().Set("Content-Type", "application/json")
-			if _, err := w.Write([]byte(`{"spreadsheetId":"newId","spreadsheetUrl":"url","properties":{"title":"Test"}}`)); err != nil {
-				t.Errorf("failed to write response: %v", err)
-			}
-			t.Logf("Request: %s %s", r.Method, r.URL.Path)
-		// Emulate setting permissions on a file in Google Drive (for example, to access a spreadsheet)
-		case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/drive/v3/files/") && strings.HasSuffix(r.URL.Path, "/permissions"):
-			w.Header().Set("Content-Type", "application/json")
-			if _, err := w.Write([]byte(`{"id":"permissionId"}`)); err != nil {
-				t.Errorf("failed to write response: %v", err)
-			}
-			t.Logf("Request: %s %s", r.Method, r.URL.Path)
+		// Sheets: batchUpdate
+		case r.Method == http.MethodPost && r.URL.Path == "/v4/spreadsheets/spreadsheetId/values:batchUpdate":
+			_, _ = w.Write([]byte(`{"spreadsheetId":"spreadsheetId","totalUpdatedCells":1}`))
+			return
 
-		default:
-			t.Fatalf("unexpected path: %s", r.URL.Path)
+		// Sheets: Get default range
+		case r.Method == http.MethodGet && r.URL.Path == "/v4/spreadsheets/spreadsheetId/values/A1:Z1000":
+			_, _ = w.Write([]byte(`{"range":"A1:Z1000","values":[["val1"],["val2"]]}`))
+			return
 
+		// Sheets: Clear values
+		case r.Method == http.MethodPost && r.URL.Path == "/v4/spreadsheets/spreadsheetId/values/A1:Z1000:clear":
+			_, _ = w.Write([]byte(`{"clearedRange":"A1:Z1000"}`))
+			return
+
+		// Sheets: Create spreadsheet
+		case r.Method == http.MethodPost && r.URL.Path == "/v4/spreadsheets":
+			_, _ = w.Write([]byte(`{"spreadsheetId":"newId","spreadsheetUrl":"url","properties":{"title":"Test"}}`))
+			return
+
+		// Drive: create permission
+		case r.Method == http.MethodPost && r.URL.Path == "/drive/v3/files/testSheetID/permissions":
+			// Симулируем 409-конфликт (уже расшарено), если пришло EmailMessage=conflict
+			if r.URL.Query().Get("emailMessage") == "conflict" {
+				w.WriteHeader(http.StatusConflict)
+				_ = json.NewEncoder(w).Encode(map[string]any{
+					"error": map[string]any{
+						"code":    409,
+						"message": "alreadyShared",
+					},
+				})
+				return
+			}
+			_, _ = w.Write([]byte(`{"id":"permissionId"}`))
+			return
 		}
-	}))
 
+		t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
+	}))
 }
 
-// TestBatchUpdate_Integration checks the correct execution of the BatchUpdate request
+// --------- вспомогательные сущности ---------
+
+// Заглушка PermissionSetter, чтобы Create не дергал Drive
+type stubPermissionSetter struct{}
+
+func (s stubPermissionSetter) SetPermission(ctx context.Context, sheetID string) error {
+	return nil
+}
+
+// --------- тесты ---------
+
 func TestBatchUpdate_Integration(t *testing.T) {
 	ts := newTestServer(t)
 	defer ts.Close()
 
-	srv, err := sheets.NewService(context.Background(), option.WithEndpoint(ts.URL), option.WithoutAuthentication())
+	sheetsSvc, err := sheets.NewService(context.Background(),
+		option.WithEndpoint(ts.URL),
+		option.WithoutAuthentication(),
+	)
 	if err != nil {
-		t.Fatalf("failed to create service: %v", err)
+		t.Fatalf("sheets.NewService: %v", err)
 	}
-	uc := sheetUsecase.NewSheetUse(srv, logrus.New(), &config.PermissionsStruct{})
+	driveSvc, err := drive.NewService(context.Background(),
+		option.WithEndpoint(ts.URL),
+		option.WithoutAuthentication(),
+	)
+	if err != nil {
+		t.Fatalf("drive.NewService: %v", err)
+	}
+
+	uc := NewSheetUse(sheetsSvc, driveSvc, logrus.New(), &config.PermissionsStruct{}, "testSheetID")
 
 	updates := []models.UpdateRequest{
-		{
-			Range:  "A1:B1",
-			Values: [][]interface{}{{"Test1", "Test2"}},
-		},
+		{Range: "A1:B1", Values: [][]interface{}{{"x", "y"}}},
 	}
 	resp, err := uc.BatchUpdate(context.Background(), "spreadsheetId", updates)
 	if err != nil {
 		t.Fatalf("BatchUpdate error: %v", err)
 	}
 	if resp.TotalUpdatedCells != 1 {
-		t.Errorf("expected 1 updated cell, got %d", resp.TotalUpdatedCells)
+		t.Errorf("expected TotalUpdatedCells=1, got %d", resp.TotalUpdatedCells)
 	}
 }
 
-// TestGet_Integration checks for getting values from a table
-func TestGet_Integration(t *testing.T) {
+func TestBatchUpdate_InvalidParam(t *testing.T) {
+	// updates == nil -> ошибка валидации, без HTTP
+	uc := &sheetUseCase{log: logrus.New()}
+	_, err := uc.BatchUpdate(context.Background(), "spreadsheetId", nil)
+	if err == nil || !strings.Contains(err.Error(), "invalid parameter") {
+		t.Fatalf("expected validation error, got %v", err)
+	}
+}
+
+func TestGet_DefaultRange_Integration(t *testing.T) {
 	ts := newTestServer(t)
 	defer ts.Close()
 
-	srv, _ := sheets.NewService(context.Background(), option.WithEndpoint(ts.URL), option.WithoutAuthentication())
-	uc := sheetUsecase.NewSheetUse(srv, logrus.New(), &config.PermissionsStruct{})
+	sheetsSvc, _ := sheets.NewService(context.Background(), option.WithEndpoint(ts.URL), option.WithoutAuthentication())
+	driveSvc, _ := drive.NewService(context.Background(), option.WithEndpoint(ts.URL), option.WithoutAuthentication())
 
-	values, err := uc.Get(context.Background(), "spreadsheetId", "A1:Z1000")
+	uc := NewSheetUse(sheetsSvc, driveSvc, logrus.New(), &config.PermissionsStruct{}, "testSheetID")
+
+	values, err := uc.Get(context.Background(), "spreadsheetId", "")
 	if err != nil {
 		t.Fatalf("Get error: %v", err)
 	}
 	if len(values) != 2 || values[0][0] != "val1" {
-		t.Errorf("unexpected values: %v", values)
+		t.Errorf("unexpected values: %#v", values)
 	}
 }
 
-// TestDelete_Integration checks if the range of values in the table is cleared
 func TestDelete_Integration(t *testing.T) {
 	ts := newTestServer(t)
 	defer ts.Close()
 
-	srv, _ := sheets.NewService(context.Background(), option.WithEndpoint(ts.URL), option.WithoutAuthentication())
-	uc := sheetUsecase.NewSheetUse(srv, logrus.New(), &config.PermissionsStruct{})
+	sheetsSvc, _ := sheets.NewService(context.Background(), option.WithEndpoint(ts.URL), option.WithoutAuthentication())
+	driveSvc, _ := drive.NewService(context.Background(), option.WithEndpoint(ts.URL), option.WithoutAuthentication())
+
+	uc := NewSheetUse(sheetsSvc, driveSvc, logrus.New(), &config.PermissionsStruct{}, "testSheetID")
 
 	resp, err := uc.Delete(context.Background(), "spreadsheetId", "A1:Z1000")
 	if err != nil {
 		t.Fatalf("Delete error: %v", err)
 	}
 	if resp.ClearedRange != "A1:Z1000" {
-		t.Errorf("expected cleared range A1:Z1000, got %s", resp.ClearedRange)
+		t.Errorf("expected cleared A1:Z1000, got %s", resp.ClearedRange)
 	}
 }
 
-// mockPermissionSetter - a mock for PermissionSetter that does nothing.
-// Used to replace the real permission setter in tests.
-type mockPermissionSetter struct{}
-
-func (m mockPermissionSetter) SetPermission(ctx context.Context, sheetID string) error {
-	return nil
-}
-
-// TestCreate_Integration checks the creation of a new table and the setting of permissions
 func TestCreate_Integration(t *testing.T) {
 	ts := newTestServer(t)
 	defer ts.Close()
 
-	srv, _ := sheets.NewService(context.Background(), option.WithEndpoint(ts.URL), option.WithoutAuthentication())
-	uc := sheetUsecase.NewSheetUse(srv, logrus.New(), &config.PermissionsStruct{})
+	sheetsSvc, _ := sheets.NewService(context.Background(), option.WithEndpoint(ts.URL), option.WithoutAuthentication())
+	driveSvc, _ := drive.NewService(context.Background(), option.WithEndpoint(ts.URL), option.WithoutAuthentication())
 
-	// Replace PermissionSetter with a mock to avoid making real requests to Google Drive
-	uc.SetPermissionSetter(&mockPermissionSetter{})
+	uc := NewSheetUse(sheetsSvc, driveSvc, logrus.New(), &config.PermissionsStruct{}, "testSheetID")
+	// Заменяем реальный выставитель прав на заглушку
+	uc.SetPermissionSetter(stubPermissionSetter{})
 
 	req := models.CreateRequest{
 		Properties: struct {
 			Title string `json:"title" binding:"required"`
-		}(struct{ Title string }{Title: "Test"}),
+		}{Title: "Test"},
 	}
 	resp, err := uc.Create(context.Background(), req)
 	if err != nil {
 		t.Fatalf("Create error: %v", err)
 	}
 	if resp.SpreadsheetId != "newId" {
-		t.Errorf("expected SpreadsheetId newId, got %s", resp.SpreadsheetId)
+		t.Errorf("expected SpreadsheetId=newId, got %s", resp.SpreadsheetId)
 	}
 	if resp.Properties.Title != "Test" {
-		t.Errorf("expected Title Test, got %s", resp.Properties.Title)
+		t.Errorf("expected title Test, got %s", resp.Properties.Title)
 	}
+}
 
+func TestCreate_ValidationError(t *testing.T) {
+	uc := &sheetUseCase{log: logrus.New()}
+	_, err := uc.Create(context.Background(), models.CreateRequest{
+		Properties: struct {
+			Title string `json:"title" binding:"required"`
+		}{Title: ""},
+	})
+	if err == nil || !strings.Contains(err.Error(), "invalid parameter") {
+		t.Fatalf("expected validation error, got %v", err)
+	}
+}
+
+func TestSharePermission_Validation(t *testing.T) {
+	uc := &sheetUseCase{log: logrus.New()}
+	_, err := uc.SharePermission(context.Background(), models.ShareRequest{Email: ""})
+	if err == nil || !strings.Contains(err.Error(), "email is required") {
+		t.Fatalf("expected email is required error, got %v", err)
+	}
+}
+
+func TestSharePermission_SendEmailFalse_OK(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+
+	sheetsSvc, _ := sheets.NewService(context.Background(), option.WithEndpoint(ts.URL), option.WithoutAuthentication())
+	driveSvc, _ := drive.NewService(
+		context.Background(),
+		option.WithEndpoint(strings.TrimRight(ts.URL, "/")+"/drive/v3/"),
+		option.WithoutAuthentication(),
+	)
+	uc := NewSheetUse(sheetsSvc, driveSvc, logrus.New(), &config.PermissionsStruct{}, "testSheetID")
+
+	p, err := uc.SharePermission(context.Background(), models.ShareRequest{
+		Email:        "user@example.com",
+		SendEmail:    false,
+		EmailMessage: "",
+	})
+	if err != nil {
+		t.Fatalf("SharePermission error: %v", err)
+	}
+	if p == nil || p.Id != "permissionId" {
+		t.Fatalf("unexpected permission: %#v", p)
+	}
+}
+
+func TestSharePermission_SendEmailTrue_WithMessage_OK(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+
+	sheetsSvc, _ := sheets.NewService(context.Background(), option.WithEndpoint(ts.URL), option.WithoutAuthentication())
+	driveSvc, _ := drive.NewService(
+		context.Background(),
+		option.WithEndpoint(strings.TrimRight(ts.URL, "/")+"/drive/v3/"),
+		option.WithoutAuthentication(),
+	)
+	uc := NewSheetUse(sheetsSvc, driveSvc, logrus.New(), &config.PermissionsStruct{}, "testSheetID")
+
+	p, err := uc.SharePermission(context.Background(), models.ShareRequest{
+		Email:        "user@example.com",
+		SendEmail:    true,
+		EmailMessage: "hello",
+	})
+	if err != nil {
+		t.Fatalf("SharePermission error: %v", err)
+	}
+	if p == nil || p.Id != "permissionId" {
+		t.Fatalf("unexpected permission: %#v", p)
+	}
+}
+
+func TestSharePermission_Conflict409_ReturnsEmptyID_NoError(t *testing.T) {
+	ts := newTestServer(t)
+	defer ts.Close()
+
+	sheetsSvc, _ := sheets.NewService(context.Background(), option.WithEndpoint(ts.URL), option.WithoutAuthentication())
+	driveSvc, _ := drive.NewService(
+		context.Background(),
+		option.WithEndpoint(strings.TrimRight(ts.URL, "/")+"/drive/v3/"),
+		option.WithoutAuthentication(),
+	)
+	uc := NewSheetUse(sheetsSvc, driveSvc, logrus.New(), &config.PermissionsStruct{}, "testSheetID")
+
+	// Триггерим 409 через emailMessage=conflict (см. newTestServer)
+	p, err := uc.SharePermission(context.Background(), models.ShareRequest{
+		Email:        "user@example.com",
+		SendEmail:    true,
+		EmailMessage: "conflict",
+	})
+	if err != nil {
+		t.Fatalf("expected no error on 409, got %v", err)
+	}
+	if p == nil || p.Id != "" {
+		t.Fatalf("expected empty permission id on 409, got %#v", p)
+	}
 }

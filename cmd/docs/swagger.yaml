@@ -1,14 +1,5 @@
 basePath: /api/v1
 definitions:
-  models.BatchUpdateRequest:
-    properties:
-      updates:
-        items:
-          $ref: '#/definitions/models.UpdateRequest'
-        type: array
-    required:
-    - updates
-    type: object
   models.CreateRequest:
     properties:
       properties:
@@ -28,20 +19,14 @@ definitions:
     required:
     - title
     type: object
-  models.UpdateRequest:
+  models.ShareRequest:
     properties:
-      range:
+      email:
         type: string
-      value:
+      emailMessage:
         type: string
-      values:
-        items:
-          items: {}
-          type: array
-        type: array
-    required:
-    - range
-    - value
+      sendEmail:
+        type: boolean
     type: object
   responses.BandedRange:
     properties:
@@ -195,23 +180,6 @@ definitions:
         type: integer
       pointStyle:
         $ref: '#/definitions/responses.PointStyle'
-    type: object
-  responses.BatchUpdateValuesResponse:
-    properties:
-      responses:
-        items:
-          $ref: '#/definitions/responses.UpdateValuesResponse'
-        type: array
-      spreadsheetId:
-        type: string
-      totalUpdatedCells:
-        type: integer
-      totalUpdatedColumns:
-        type: integer
-      totalUpdatedRows:
-        type: integer
-      totalUpdatedSheets:
-        type: integer
     type: object
   responses.BigQueryDataSourceSpec:
     properties:
@@ -1588,33 +1556,6 @@ definitions:
       textFormat:
         $ref: '#/definitions/responses.TextFormat'
     type: object
-  responses.UpdateValuesResponse:
-    properties:
-      spreadsheetId:
-        type: string
-      updatedCells:
-        type: integer
-      updatedColumns:
-        type: integer
-      updatedData:
-        $ref: '#/definitions/responses.ValueRange'
-      updatedRange:
-        type: string
-      updatedRows:
-        type: integer
-    type: object
-  responses.ValueRange:
-    properties:
-      majorDimension:
-        type: string
-      range:
-        type: string
-      values:
-        items:
-          items: {}
-          type: array
-        type: array
-    type: object
   responses.WaterfallChartColumnStyle:
     properties:
       color:
@@ -1692,6 +1633,31 @@ info:
   title: Google Sheets API
   version: "1.0"
 paths:
+  /api/v1/sheets/capabilities:
+    get:
+      description: Reads ./capabilities.json and returns it parsed as JSON
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Raw JSON
+          schema:
+            type: object
+        "400":
+          description: Invalid JSON
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+        "404":
+          description: File not found
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+      summary: Get capabilities
+      tags:
+      - Utils
   /api/v1/sheets/clearTable:
     post:
       consumes:
@@ -1799,40 +1765,35 @@ paths:
       summary: Get data from Google Sheets
       tags:
       - Sheets
-  /api/v1/sheets/update:
+  /api/v1/sheets/share:
     post:
       consumes:
       - application/json
-      description: Accepts a list of updates and applies them to the specified Google
-        Sheet.
+      description: Grants "reader" permission to a user by email
       parameters:
-      - description: Google Sheet ID
-        in: query
-        name: sheet_id
-        required: true
-        type: string
-      - description: List of updates...
+      - description: Share payload
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.BatchUpdateRequest'
+          $ref: '#/definitions/models.ShareRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: Success response with status and data
+          description: status + permission
           schema:
-            $ref: '#/definitions/responses.BatchUpdateValuesResponse'
+            additionalProperties: true
+            type: object
         "400":
-          description: Bad request with error message
+          description: Invalid request body
           schema:
             $ref: '#/definitions/responses.ResponseError'
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/responses.ResponseError'
-      summary: Batch update Google Sheets
+      summary: Share a Google Sheet (read access)
       tags:
       - Sheets
 schemes:

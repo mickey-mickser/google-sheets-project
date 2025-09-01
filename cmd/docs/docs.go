@@ -24,6 +24,44 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/sheets/capabilities": {
+            "get": {
+                "description": "Reads ./capabilities.json and returns it parsed as JSON",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Utils"
+                ],
+                "summary": "Get capabilities",
+                "responses": {
+                    "200": {
+                        "description": "Raw JSON",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid JSON",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ResponseError"
+                        }
+                    },
+                    "404": {
+                        "description": "File not found",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/responses.ResponseError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/sheets/clearTable": {
             "post": {
                 "description": "This endpoint clear table in a Google Sheets document",
@@ -183,9 +221,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/sheets/update": {
+        "/api/v1/sheets/share": {
             "post": {
-                "description": "Accepts a list of updates and applies them to the specified Google Sheet.",
+                "description": "Grants \"reader\" permission to a user by email",
                 "consumes": [
                     "application/json"
                 ],
@@ -195,34 +233,28 @@ const docTemplate = `{
                 "tags": [
                     "Sheets"
                 ],
-                "summary": "Batch update Google Sheets",
+                "summary": "Share a Google Sheet (read access)",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Google Sheet ID",
-                        "name": "sheet_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "description": "List of updates...",
+                        "description": "Share payload",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.BatchUpdateRequest"
+                            "$ref": "#/definitions/models.ShareRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success response with status and data",
+                        "description": "status + permission",
                         "schema": {
-                            "$ref": "#/definitions/responses.BatchUpdateValuesResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad request with error message",
+                        "description": "Invalid request body",
                         "schema": {
                             "$ref": "#/definitions/responses.ResponseError"
                         }
@@ -238,20 +270,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "models.BatchUpdateRequest": {
-            "type": "object",
-            "required": [
-                "updates"
-            ],
-            "properties": {
-                "updates": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.UpdateRequest"
-                    }
-                }
-            }
-        },
         "models.CreateRequest": {
             "type": "object",
             "required": [
@@ -282,25 +300,17 @@ const docTemplate = `{
                 }
             }
         },
-        "models.UpdateRequest": {
+        "models.ShareRequest": {
             "type": "object",
-            "required": [
-                "range",
-                "value"
-            ],
             "properties": {
-                "range": {
+                "email": {
                     "type": "string"
                 },
-                "value": {
+                "emailMessage": {
                     "type": "string"
                 },
-                "values": {
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {}
-                    }
+                "sendEmail": {
+                    "type": "boolean"
                 }
             }
         },
@@ -535,32 +545,6 @@ const docTemplate = `{
                 },
                 "pointStyle": {
                     "$ref": "#/definitions/responses.PointStyle"
-                }
-            }
-        },
-        "responses.BatchUpdateValuesResponse": {
-            "type": "object",
-            "properties": {
-                "responses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/responses.UpdateValuesResponse"
-                    }
-                },
-                "spreadsheetId": {
-                    "type": "string"
-                },
-                "totalUpdatedCells": {
-                    "type": "integer"
-                },
-                "totalUpdatedColumns": {
-                    "type": "integer"
-                },
-                "totalUpdatedRows": {
-                    "type": "integer"
-                },
-                "totalUpdatedSheets": {
-                    "type": "integer"
                 }
             }
         },
@@ -2679,47 +2663,6 @@ const docTemplate = `{
                 },
                 "textFormat": {
                     "$ref": "#/definitions/responses.TextFormat"
-                }
-            }
-        },
-        "responses.UpdateValuesResponse": {
-            "type": "object",
-            "properties": {
-                "spreadsheetId": {
-                    "type": "string"
-                },
-                "updatedCells": {
-                    "type": "integer"
-                },
-                "updatedColumns": {
-                    "type": "integer"
-                },
-                "updatedData": {
-                    "$ref": "#/definitions/responses.ValueRange"
-                },
-                "updatedRange": {
-                    "type": "string"
-                },
-                "updatedRows": {
-                    "type": "integer"
-                }
-            }
-        },
-        "responses.ValueRange": {
-            "type": "object",
-            "properties": {
-                "majorDimension": {
-                    "type": "string"
-                },
-                "range": {
-                    "type": "string"
-                },
-                "values": {
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {}
-                    }
                 }
             }
         },

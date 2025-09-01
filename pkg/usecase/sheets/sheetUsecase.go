@@ -49,10 +49,11 @@ type sheetUseCase struct {
 	log        *logrus.Logger
 	permission *config.PermissionsStruct
 	permSetter PermissionSetter
+	sheetID    string
 }
 
 // NewSheetUse initializes a new SheetUseCase
-func NewSheetUse(cli *sheets.Service, driveSvc *drive.Service, log *logrus.Logger, permission *config.PermissionsStruct) SheetUseCase {
+func NewSheetUse(cli *sheets.Service, driveSvc *drive.Service, log *logrus.Logger, permission *config.PermissionsStruct, sheetID string) SheetUseCase {
 	return &sheetUseCase{
 		cli:        cli,
 		driveSvc:   driveSvc,
@@ -64,6 +65,7 @@ func NewSheetUse(cli *sheets.Service, driveSvc *drive.Service, log *logrus.Logge
 			Role:         permission.PermissionRole,
 			Type:         permission.PermissionType,
 		},
+		sheetID: sheetID,
 	}
 }
 
@@ -130,10 +132,6 @@ func (s *sheetUseCase) Create(ctx context.Context, body models.CreateRequest) (*
 			Title: body.Properties.Title,
 		},
 	}
-	err := s.grantSheetAccess(ctx, "1qPyWOoR5fXwLEAX10yKrNJsZa0BETGd23L3Yg-T46LM")
-	if err != nil {
-		return nil, fmt.Errorf("failed to set permissions: %w", err)
-	}
 
 	resp, err := s.cli.Spreadsheets.Create(&createRequest).Context(ctx).Do()
 	if err != nil {
@@ -141,6 +139,10 @@ func (s *sheetUseCase) Create(ctx context.Context, body models.CreateRequest) (*
 			logrus.Errorf("Sheets API error: code=%d, body=%s", gErr.Code, gErr.Body)
 		}
 		return nil, fmt.Errorf("create usecase: error creating table in Google Sheets: %w", err)
+	}
+	err = s.grantSheetAccess(ctx, resp.SpreadsheetId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set permissions: %w", err)
 	}
 	s.log.Printf("Table created: %s\n", resp.SpreadsheetUrl)
 	return resp, nil
@@ -159,7 +161,7 @@ func (s *sheetUseCase) SharePermission(ctx context.Context, body models.ShareReq
 	}
 
 	call := s.driveSvc.Permissions.
-		Create("1qPyWOoR5fXwLEAX10yKrNJsZa0BETGd23L3Yg-T46LM", perm).
+		Create(s.sheetID, perm).
 		SupportsAllDrives(true).
 		Fields("id").
 		Context(ctx)

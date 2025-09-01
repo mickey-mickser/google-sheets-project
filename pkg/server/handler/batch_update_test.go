@@ -94,6 +94,14 @@ func TestHandler_BatchUpdate(t *testing.T) {
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
-		assert.Contains(t, rec.Body.String(), "Something bad happened")
+
+		var got map[string]string
+		if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+			t.Fatalf("failed to unmarshal response: %v; body=%s", err, rec.Body.String())
+		}
+
+		assert.Equal(t, "Failed to update the Google Sheets", got["message"])
+		assert.Equal(t, assert.AnError.Error(), got["error"])
 	})
+
 }

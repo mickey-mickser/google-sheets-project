@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"fmt"
+	"bytes"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	mockusecase "github.com/mickey-mickser/google-sheets-project/pkg/mocks"
@@ -16,11 +17,12 @@ import (
 )
 
 func TestHandler_Create(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockUseCase := mockusecase.NewMockSheetUseCase(ctrl)
-	r := gin.Default()
 	log := logrus.New()
 
 	h := Handler{
@@ -28,61 +30,67 @@ func TestHandler_Create(t *testing.T) {
 		SheetUse: mockUseCase,
 	}
 
+	r := gin.Default()
 	r.POST("/create", h.Create)
 
-	tests := []struct {
-		name           string
-		body           string
-		mockReturn     interface{}
-		mockError      error
-		expectedStatus int
-		expectedBody   string
-	}{
-		{
-			name:           "Success",
-			body:           `{"properties": {"title": "Sheet1"}}`,
-			mockReturn:     &sheets.Spreadsheet{},
-			mockError:      nil,
-			expectedStatus: http.StatusOK,
-			expectedBody:   `{"status":"ok","data":{}}`,
-		},
-		{
-			name:           "Invalid request body",
-			body:           `{invalid json}`,
-			mockReturn:     nil,
-			mockError:      fmt.Errorf("failed to unmarshal createRequest body: invalid character 'i' looking for beginning of value"),
-			expectedStatus: http.StatusBadRequest,
-			expectedBody:   `{"code":"006", "detail":"invalid character 'i' looking for beginning of object key string"}`,
-		},
-		{
-			name:           "Failed to create table",
-			body:           `{"properties": {"title": "Sheet1"}}`,
-			mockReturn:     nil,
-			mockError:      fmt.Errorf("creation error"),
-			expectedStatus: http.StatusInternalServerError,
-			expectedBody:   `{"code":"000", "detail":"Something bad happened"}`,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.name != "Invalid request body" {
-				mockUseCase.
-					EXPECT().
-					Create(gomock.Any(), models.CreateRequest{
-						Properties: models.Properties{
-							Title: "Sheet1",
-						},
-					}).
-					Return(tt.mockReturn, tt.mockError)
-			}
+	t.Run("Success", func(t *testing.T) {
+		reqBody := `{"properties":{"title":"Sheet1"}}`
 
-			req := httptest.NewRequest(http.MethodPost, "/create", strings.NewReader(tt.body))
-			w := httptest.NewRecorder()
-			r.ServeHTTP(w, req)
+		mockUseCase.EXPECT().
+			Create(gomock.Any(), models.CreateRequest{
+				Properties: models.Properties{Title: "Sheet1"},
+			}).
+			Return(&sheets.Spreadsheet{}, nil)
 
-			assert.Equal(t, tt.expectedStatus, w.Code)
-			assert.JSONEq(t, tt.expectedBody, w.Body.String())
-		})
-	}
+		req := httptest.NewRequest(http.MethodPost, "/create", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
 
+		r.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.JSONEq(t, `{"status":"ok","data":{}}`, rec.Body.String())
+	})
+
+	t.Run("Invalid request body", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPost, "/create", strings.NewReader(`{invalid json}`))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		r.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+
+		var got map[string]string
+		if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+			t.Fatalf("failed to unmarshal response: %v; body=%s", err, rec.Body.String())
+		}
+		assert.Equal(t, "006", got["code"])
+		assert.Contains(t, got["detail"], "invalid character 'i' looking for beginning of object key string")
+	})
+
+	t.Run("Failed to create table", func(t *testing.T) {
+		reqBody := `{"properties":{"title":"Sheet1"}}`
+
+		mockUseCase.EXPECT().
+			Create(gomock.Any(), models.CreateRequest{
+				Properties: models.Properties{Title: "Sheet1"},
+			}).
+			Return(nil, assert.AnError)
+
+		req := httptest.NewRequest(http.MethodPost, "/create", bytes.NewBufferString(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		r.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+
+		var got map[string]string
+		if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+			t.Fatalf("failed to unmarshal response: %v; body=%s", err, rec.Body.String())
+		}
+		assert.Equal(t, "000", got["code"])
+		assert.Equal(t, "Something bad happened", got["detail"])
+	})
 }

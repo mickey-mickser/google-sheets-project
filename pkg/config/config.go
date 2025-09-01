@@ -9,11 +9,13 @@ import (
 type Config interface {
 	Log() *logrus.Logger
 	Permissions() *PermissionsStruct
+	Sheet() *SheetStruct
 }
 
 type config struct {
 	logger
 	permissions
+	sheet
 }
 
 func NewConfig(cfgPath string) (Config, error) {
