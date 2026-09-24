@@ -4,10 +4,9 @@ type validate func() error
 
 func (cfg *config) validate() error {
 	validations := []validate{
-		cfg.db.validate,
 		cfg.logger.validate,
-		cfg.tgBotToken.validate,
-		cfg.googleSheet.validate,
+		cfg.permissions.validate,
+		cfg.sheet.validate,
 	}
 
 	for _, validate := range validations {

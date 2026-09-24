@@ -1,0 +1,6 @@
+{
+  "permissions": [
+    "sheets.spreadsheets.create",
+    "drive.files.create"
+  ]
+}

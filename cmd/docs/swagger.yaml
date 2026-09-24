@@ -1,0 +1,1801 @@
+basePath: /api/v1
+definitions:
+  models.CreateRequest:
+    properties:
+      properties:
+        $ref: '#/definitions/models.Properties'
+    required:
+    - properties
+    type: object
+  models.DeleteRequest:
+    properties:
+      range:
+        type: string
+    type: object
+  models.Properties:
+    properties:
+      title:
+        type: string
+    required:
+    - title
+    type: object
+  models.ShareRequest:
+    properties:
+      email:
+        type: string
+      emailMessage:
+        type: string
+      sendEmail:
+        type: boolean
+    type: object
+  responses.BandedRange:
+    properties:
+      bandedRangeId:
+        type: integer
+      columnProperties:
+        $ref: '#/definitions/responses.BandingProperties'
+      range:
+        $ref: '#/definitions/responses.GridRange'
+      rowProperties:
+        $ref: '#/definitions/responses.BandingProperties'
+    type: object
+  responses.BandingProperties:
+    properties:
+      firstBandColor:
+        $ref: '#/definitions/responses.Color'
+      firstBandColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      footerColor:
+        $ref: '#/definitions/responses.Color'
+      footerColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      headerColor:
+        $ref: '#/definitions/responses.Color'
+      headerColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      secondBandColor:
+        $ref: '#/definitions/responses.Color'
+      secondBandColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+    type: object
+  responses.BaselineValueFormat:
+    properties:
+      comparisonType:
+        type: string
+      description:
+        type: string
+      negativeColor:
+        $ref: '#/definitions/responses.Color'
+      negativeColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      position:
+        $ref: '#/definitions/responses.TextPosition'
+      positiveColor:
+        $ref: '#/definitions/responses.Color'
+      positiveColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      textFormat:
+        $ref: '#/definitions/responses.TextFormat'
+    type: object
+  responses.BasicChartAxis:
+    properties:
+      format:
+        $ref: '#/definitions/responses.TextFormat'
+      position:
+        type: string
+      title:
+        type: string
+      titleTextPosition:
+        $ref: '#/definitions/responses.TextPosition'
+      viewWindowOptions:
+        $ref: '#/definitions/responses.ChartAxisViewWindowOptions'
+    type: object
+  responses.BasicChartDomain:
+    properties:
+      domain:
+        $ref: '#/definitions/responses.ChartData'
+      reversed:
+        type: boolean
+    type: object
+  responses.BasicChartSeries:
+    properties:
+      color:
+        $ref: '#/definitions/responses.Color'
+      colorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      dataLabel:
+        $ref: '#/definitions/responses.DataLabel'
+      lineStyle:
+        $ref: '#/definitions/responses.LineStyle'
+      pointStyle:
+        $ref: '#/definitions/responses.PointStyle'
+      series:
+        $ref: '#/definitions/responses.ChartData'
+      styleOverrides:
+        items:
+          $ref: '#/definitions/responses.BasicSeriesDataPointStyleOverride'
+        type: array
+      targetAxis:
+        type: string
+      type:
+        type: string
+    type: object
+  responses.BasicChartSpec:
+    properties:
+      axis:
+        items:
+          $ref: '#/definitions/responses.BasicChartAxis'
+        type: array
+      chartType:
+        type: string
+      compareMode:
+        type: string
+      domains:
+        items:
+          $ref: '#/definitions/responses.BasicChartDomain'
+        type: array
+      headerCount:
+        type: integer
+      interpolateNulls:
+        type: boolean
+      legendPosition:
+        type: string
+      lineSmoothing:
+        type: boolean
+      series:
+        items:
+          $ref: '#/definitions/responses.BasicChartSeries'
+        type: array
+      stackedType:
+        type: string
+      threeDimensional:
+        type: boolean
+      totalDataLabel:
+        $ref: '#/definitions/responses.DataLabel'
+    type: object
+  responses.BasicFilter:
+    properties:
+      criteria:
+        additionalProperties:
+          $ref: '#/definitions/responses.FilterCriteria'
+        type: object
+      filterSpecs:
+        items:
+          $ref: '#/definitions/responses.FilterSpec'
+        type: array
+      range:
+        $ref: '#/definitions/responses.GridRange'
+      sortSpecs:
+        items:
+          $ref: '#/definitions/responses.SortSpec'
+        type: array
+    type: object
+  responses.BasicSeriesDataPointStyleOverride:
+    properties:
+      color:
+        $ref: '#/definitions/responses.Color'
+      colorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      index:
+        type: integer
+      pointStyle:
+        $ref: '#/definitions/responses.PointStyle'
+    type: object
+  responses.BigQueryDataSourceSpec:
+    properties:
+      projectId:
+        type: string
+      querySpec:
+        $ref: '#/definitions/responses.BigQueryQuerySpec'
+      tableSpec:
+        $ref: '#/definitions/responses.BigQueryTableSpec'
+    type: object
+  responses.BigQueryQuerySpec:
+    properties:
+      rawQuery:
+        type: string
+    type: object
+  responses.BigQueryTableSpec:
+    properties:
+      datasetId:
+        type: string
+      tableId:
+        type: string
+      tableProjectId:
+        type: string
+    type: object
+  responses.BooleanCondition:
+    properties:
+      type:
+        type: string
+      values:
+        items:
+          $ref: '#/definitions/responses.ConditionValue'
+        type: array
+    type: object
+  responses.BooleanRule:
+    properties:
+      condition:
+        $ref: '#/definitions/responses.BooleanCondition'
+      format:
+        $ref: '#/definitions/responses.CellFormat'
+    type: object
+  responses.Border:
+    properties:
+      color:
+        $ref: '#/definitions/responses.Color'
+      colorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      style:
+        type: string
+      width:
+        type: integer
+    type: object
+  responses.Borders:
+    properties:
+      bottom:
+        $ref: '#/definitions/responses.Border'
+      left:
+        $ref: '#/definitions/responses.Border'
+      right:
+        $ref: '#/definitions/responses.Border'
+      top:
+        $ref: '#/definitions/responses.Border'
+    type: object
+  responses.BubbleChartSpec:
+    properties:
+      bubbleBorderColor:
+        $ref: '#/definitions/responses.Color'
+      bubbleBorderColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      bubbleLabels:
+        $ref: '#/definitions/responses.ChartData'
+      bubbleMaxRadiusSize:
+        type: integer
+      bubbleMinRadiusSize:
+        type: integer
+      bubbleOpacity:
+        type: number
+      bubbleSizes:
+        $ref: '#/definitions/responses.ChartData'
+      bubbleTextStyle:
+        $ref: '#/definitions/responses.TextFormat'
+      domain:
+        $ref: '#/definitions/responses.ChartData'
+      groupIds:
+        $ref: '#/definitions/responses.ChartData'
+      legendPosition:
+        type: string
+      series:
+        $ref: '#/definitions/responses.ChartData'
+    type: object
+  responses.CandlestickChartSpec:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/responses.CandlestickData'
+        type: array
+      domain:
+        $ref: '#/definitions/responses.CandlestickDomain'
+    type: object
+  responses.CandlestickData:
+    properties:
+      closeSeries:
+        $ref: '#/definitions/responses.CandlestickSeries'
+      highSeries:
+        $ref: '#/definitions/responses.CandlestickSeries'
+      lowSeries:
+        $ref: '#/definitions/responses.CandlestickSeries'
+      openSeries:
+        $ref: '#/definitions/responses.CandlestickSeries'
+    type: object
+  responses.CandlestickDomain:
+    properties:
+      data:
+        $ref: '#/definitions/responses.ChartData'
+      reversed:
+        type: boolean
+    type: object
+  responses.CandlestickSeries:
+    properties:
+      data:
+        $ref: '#/definitions/responses.ChartData'
+    type: object
+  responses.CellData:
+    properties:
+      dataSourceFormula:
+        $ref: '#/definitions/responses.DataSourceFormula'
+      dataSourceTable:
+        $ref: '#/definitions/responses.DataSourceTable'
+      dataValidation:
+        $ref: '#/definitions/responses.DataValidationRule'
+      effectiveFormat:
+        $ref: '#/definitions/responses.CellFormat'
+      effectiveValue:
+        $ref: '#/definitions/responses.ExtendedValue'
+      formattedValue:
+        type: string
+      hyperlink:
+        type: string
+      note:
+        type: string
+      pivotTable:
+        $ref: '#/definitions/responses.PivotTable'
+      textFormatRuns:
+        items:
+          $ref: '#/definitions/responses.TextFormatRun'
+        type: array
+      userEnteredFormat:
+        $ref: '#/definitions/responses.CellFormat'
+      userEnteredValue:
+        $ref: '#/definitions/responses.ExtendedValue'
+    type: object
+  responses.CellFormat:
+    properties:
+      backgroundColor:
+        $ref: '#/definitions/responses.Color'
+      backgroundColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      borders:
+        $ref: '#/definitions/responses.Borders'
+      horizontalAlignment:
+        type: string
+      hyperlinkDisplayType:
+        type: string
+      numberFormat:
+        $ref: '#/definitions/responses.NumberFormat'
+      padding:
+        $ref: '#/definitions/responses.Padding'
+      textDirection:
+        type: string
+      textFormat:
+        $ref: '#/definitions/responses.TextFormat'
+      textRotation:
+        $ref: '#/definitions/responses.TextRotation'
+      verticalAlignment:
+        type: string
+      wrapStrategy:
+        type: string
+    type: object
+  responses.ChartAxisViewWindowOptions:
+    properties:
+      viewWindowMax:
+        type: number
+      viewWindowMin:
+        type: number
+      viewWindowMode:
+        type: string
+    type: object
+  responses.ChartCustomNumberFormatOptions:
+    properties:
+      prefix:
+        type: string
+      suffix:
+        type: string
+    type: object
+  responses.ChartData:
+    properties:
+      aggregateType:
+        type: string
+      columnReference:
+        $ref: '#/definitions/responses.DataSourceColumnReference'
+      groupRule:
+        $ref: '#/definitions/responses.ChartGroupRule'
+      sourceRange:
+        $ref: '#/definitions/responses.ChartSourceRange'
+    type: object
+  responses.ChartDateTimeRule:
+    properties:
+      type:
+        type: string
+    type: object
+  responses.ChartGroupRule:
+    properties:
+      dateTimeRule:
+        $ref: '#/definitions/responses.ChartDateTimeRule'
+      histogramRule:
+        $ref: '#/definitions/responses.ChartHistogramRule'
+    type: object
+  responses.ChartHistogramRule:
+    properties:
+      intervalSize:
+        type: number
+      maxValue:
+        type: number
+      minValue:
+        type: number
+    type: object
+  responses.ChartSourceRange:
+    properties:
+      sources:
+        items:
+          $ref: '#/definitions/responses.GridRange'
+        type: array
+    type: object
+  responses.ChartSpec:
+    properties:
+      altText:
+        type: string
+      backgroundColor:
+        $ref: '#/definitions/responses.Color'
+      backgroundColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      basicChart:
+        $ref: '#/definitions/responses.BasicChartSpec'
+      bubbleChart:
+        $ref: '#/definitions/responses.BubbleChartSpec'
+      candlestickChart:
+        $ref: '#/definitions/responses.CandlestickChartSpec'
+      dataSourceChartProperties:
+        $ref: '#/definitions/responses.DataSourceChartProperties'
+      filterSpecs:
+        items:
+          $ref: '#/definitions/responses.FilterSpec'
+        type: array
+      fontName:
+        type: string
+      hiddenDimensionStrategy:
+        type: string
+      histogramChart:
+        $ref: '#/definitions/responses.HistogramChartSpec'
+      maximized:
+        type: boolean
+      orgChart:
+        $ref: '#/definitions/responses.OrgChartSpec'
+      pieChart:
+        $ref: '#/definitions/responses.PieChartSpec'
+      scorecardChart:
+        $ref: '#/definitions/responses.ScorecardChartSpec'
+      sortSpecs:
+        items:
+          $ref: '#/definitions/responses.SortSpec'
+        type: array
+      subtitle:
+        type: string
+      subtitleTextFormat:
+        $ref: '#/definitions/responses.TextFormat'
+      subtitleTextPosition:
+        $ref: '#/definitions/responses.TextPosition'
+      title:
+        type: string
+      titleTextFormat:
+        $ref: '#/definitions/responses.TextFormat'
+      titleTextPosition:
+        $ref: '#/definitions/responses.TextPosition'
+      treemapChart:
+        $ref: '#/definitions/responses.TreemapChartSpec'
+      waterfallChart:
+        $ref: '#/definitions/responses.WaterfallChartSpec'
+    type: object
+  responses.ClearValuesResponse:
+    properties:
+      clearedRange:
+        type: string
+      spreadsheetId:
+        type: string
+    type: object
+  responses.Color:
+    properties:
+      alpha:
+        type: number
+      blue:
+        type: number
+      green:
+        type: number
+      red:
+        type: number
+    type: object
+  responses.ColorStyle:
+    properties:
+      rgbColor:
+        $ref: '#/definitions/responses.Color'
+      themeColor:
+        type: string
+    type: object
+  responses.ConditionValue:
+    properties:
+      relativeDate:
+        type: string
+      userEnteredValue:
+        type: string
+    type: object
+  responses.ConditionalFormatRule:
+    properties:
+      booleanRule:
+        $ref: '#/definitions/responses.BooleanRule'
+      gradientRule:
+        $ref: '#/definitions/responses.GradientRule'
+      ranges:
+        items:
+          $ref: '#/definitions/responses.GridRange'
+        type: array
+    type: object
+  responses.DataExecutionStatus:
+    properties:
+      errorCode:
+        type: string
+      errorMessage:
+        type: string
+      lastRefreshTime:
+        type: string
+      state:
+        type: string
+    type: object
+  responses.DataLabel:
+    properties:
+      customLabelData:
+        $ref: '#/definitions/responses.ChartData'
+      placement:
+        type: string
+      textFormat:
+        $ref: '#/definitions/responses.TextFormat'
+      type:
+        type: string
+    type: object
+  responses.DataSource:
+    properties:
+      calculatedColumns:
+        items:
+          $ref: '#/definitions/responses.DataSourceColumn'
+        type: array
+      dataSourceId:
+        type: string
+      sheetId:
+        type: integer
+      spec:
+        $ref: '#/definitions/responses.DataSourceSpec'
+    type: object
+  responses.DataSourceChartProperties:
+    properties:
+      dataExecutionStatus:
+        $ref: '#/definitions/responses.DataExecutionStatus'
+      dataSourceId:
+        type: string
+    type: object
+  responses.DataSourceColumn:
+    properties:
+      formula:
+        type: string
+      reference:
+        $ref: '#/definitions/responses.DataSourceColumnReference'
+    type: object
+  responses.DataSourceColumnReference:
+    properties:
+      name:
+        type: string
+    type: object
+  responses.DataSourceFormula:
+    properties:
+      dataExecutionStatus:
+        $ref: '#/definitions/responses.DataExecutionStatus'
+      dataSourceId:
+        type: string
+    type: object
+  responses.DataSourceParameter:
+    properties:
+      name:
+        type: string
+      namedRangeId:
+        type: string
+      range:
+        $ref: '#/definitions/responses.GridRange'
+    type: object
+  responses.DataSourceRefreshDailySchedule:
+    properties:
+      startTime:
+        $ref: '#/definitions/responses.TimeOfDay'
+    type: object
+  responses.DataSourceRefreshMonthlySchedule:
+    properties:
+      daysOfMonth:
+        items:
+          type: integer
+        type: array
+      startTime:
+        $ref: '#/definitions/responses.TimeOfDay'
+    type: object
+  responses.DataSourceRefreshSchedule:
+    properties:
+      dailySchedule:
+        $ref: '#/definitions/responses.DataSourceRefreshDailySchedule'
+      enabled:
+        type: boolean
+      monthlySchedule:
+        $ref: '#/definitions/responses.DataSourceRefreshMonthlySchedule'
+      nextRun:
+        $ref: '#/definitions/responses.Interval'
+      refreshScope:
+        type: string
+      weeklySchedule:
+        $ref: '#/definitions/responses.DataSourceRefreshWeeklySchedule'
+    type: object
+  responses.DataSourceRefreshWeeklySchedule:
+    properties:
+      daysOfWeek:
+        items:
+          type: string
+        type: array
+      startTime:
+        $ref: '#/definitions/responses.TimeOfDay'
+    type: object
+  responses.DataSourceSheetProperties:
+    properties:
+      columns:
+        items:
+          $ref: '#/definitions/responses.DataSourceColumn'
+        type: array
+      dataExecutionStatus:
+        $ref: '#/definitions/responses.DataExecutionStatus'
+      dataSourceId:
+        type: string
+    type: object
+  responses.DataSourceSpec:
+    properties:
+      bigQuery:
+        $ref: '#/definitions/responses.BigQueryDataSourceSpec'
+      looker:
+        $ref: '#/definitions/responses.LookerDataSourceSpec'
+      parameters:
+        items:
+          $ref: '#/definitions/responses.DataSourceParameter'
+        type: array
+    type: object
+  responses.DataSourceTable:
+    properties:
+      columnSelectionType:
+        type: string
+      columns:
+        items:
+          $ref: '#/definitions/responses.DataSourceColumnReference'
+        type: array
+      dataExecutionStatus:
+        $ref: '#/definitions/responses.DataExecutionStatus'
+      dataSourceId:
+        type: string
+      filterSpecs:
+        items:
+          $ref: '#/definitions/responses.FilterSpec'
+        type: array
+      rowLimit:
+        type: integer
+      sortSpecs:
+        items:
+          $ref: '#/definitions/responses.SortSpec'
+        type: array
+    type: object
+  responses.DataValidationRule:
+    properties:
+      condition:
+        $ref: '#/definitions/responses.BooleanCondition'
+      inputMessage:
+        type: string
+      showCustomUi:
+        type: boolean
+      strict:
+        type: boolean
+    type: object
+  responses.DateTimeRule:
+    properties:
+      type:
+        type: string
+    type: object
+  responses.DeveloperMetadata:
+    properties:
+      location:
+        $ref: '#/definitions/responses.DeveloperMetadataLocation'
+      metadataId:
+        type: integer
+      metadataKey:
+        type: string
+      metadataValue:
+        type: string
+      visibility:
+        type: string
+    type: object
+  responses.DeveloperMetadataLocation:
+    properties:
+      dimensionRange:
+        $ref: '#/definitions/responses.DimensionRange'
+      locationType:
+        type: string
+      sheetId:
+        type: integer
+      spreadsheet:
+        type: boolean
+    type: object
+  responses.DimensionGroup:
+    properties:
+      collapsed:
+        type: boolean
+      depth:
+        type: integer
+      range:
+        $ref: '#/definitions/responses.DimensionRange'
+    type: object
+  responses.DimensionProperties:
+    properties:
+      dataSourceColumnReference:
+        $ref: '#/definitions/responses.DataSourceColumnReference'
+      developerMetadata:
+        items:
+          $ref: '#/definitions/responses.DeveloperMetadata'
+        type: array
+      hiddenByFilter:
+        type: boolean
+      hiddenByUser:
+        type: boolean
+      pixelSize:
+        type: integer
+    type: object
+  responses.DimensionRange:
+    properties:
+      dimension:
+        type: string
+      endIndex:
+        type: integer
+      sheetId:
+        type: integer
+      startIndex:
+        type: integer
+    type: object
+  responses.Editors:
+    properties:
+      domainUsersCanEdit:
+        type: boolean
+      groups:
+        items:
+          type: string
+        type: array
+      users:
+        items:
+          type: string
+        type: array
+    type: object
+  responses.EmbeddedChart:
+    properties:
+      border:
+        $ref: '#/definitions/responses.EmbeddedObjectBorder'
+      chartId:
+        type: integer
+      position:
+        $ref: '#/definitions/responses.EmbeddedObjectPosition'
+      spec:
+        $ref: '#/definitions/responses.ChartSpec'
+    type: object
+  responses.EmbeddedObjectBorder:
+    properties:
+      color:
+        $ref: '#/definitions/responses.Color'
+      colorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+    type: object
+  responses.EmbeddedObjectPosition:
+    properties:
+      newSheet:
+        type: boolean
+      overlayPosition:
+        $ref: '#/definitions/responses.OverlayPosition'
+      sheetId:
+        type: integer
+    type: object
+  responses.ErrorValue:
+    properties:
+      message:
+        type: string
+      type:
+        type: string
+    type: object
+  responses.ExtendedValue:
+    properties:
+      boolValue:
+        type: boolean
+      errorValue:
+        $ref: '#/definitions/responses.ErrorValue'
+      formulaValue:
+        type: string
+      numberValue:
+        type: number
+      stringValue:
+        type: string
+    type: object
+  responses.FilterCriteria:
+    properties:
+      condition:
+        $ref: '#/definitions/responses.BooleanCondition'
+      hiddenValues:
+        items:
+          type: string
+        type: array
+      visibleBackgroundColor:
+        $ref: '#/definitions/responses.Color'
+      visibleBackgroundColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      visibleForegroundColor:
+        $ref: '#/definitions/responses.Color'
+      visibleForegroundColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+    type: object
+  responses.FilterSpec:
+    properties:
+      columnIndex:
+        type: integer
+      dataSourceColumnReference:
+        $ref: '#/definitions/responses.DataSourceColumnReference'
+      filterCriteria:
+        $ref: '#/definitions/responses.FilterCriteria'
+    type: object
+  responses.FilterView:
+    properties:
+      criteria:
+        additionalProperties:
+          $ref: '#/definitions/responses.FilterCriteria'
+        type: object
+      filterSpecs:
+        items:
+          $ref: '#/definitions/responses.FilterSpec'
+        type: array
+      filterViewId:
+        type: integer
+      namedRangeId:
+        type: string
+      range:
+        $ref: '#/definitions/responses.GridRange'
+      sortSpecs:
+        items:
+          $ref: '#/definitions/responses.SortSpec'
+        type: array
+      title:
+        type: string
+    type: object
+  responses.GradientRule:
+    properties:
+      maxpoint:
+        $ref: '#/definitions/responses.InterpolationPoint'
+      midpoint:
+        $ref: '#/definitions/responses.InterpolationPoint'
+      minpoint:
+        $ref: '#/definitions/responses.InterpolationPoint'
+    type: object
+  responses.GridCoordinate:
+    properties:
+      columnIndex:
+        type: integer
+      rowIndex:
+        type: integer
+      sheetId:
+        type: integer
+    type: object
+  responses.GridData:
+    properties:
+      columnMetadata:
+        items:
+          $ref: '#/definitions/responses.DimensionProperties'
+        type: array
+      rowData:
+        items:
+          $ref: '#/definitions/responses.RowData'
+        type: array
+      rowMetadata:
+        items:
+          $ref: '#/definitions/responses.DimensionProperties'
+        type: array
+      startColumn:
+        type: integer
+      startRow:
+        type: integer
+    type: object
+  responses.GridProperties:
+    properties:
+      columnCount:
+        type: integer
+      columnGroupControlAfter:
+        type: boolean
+      frozenColumnCount:
+        type: integer
+      frozenRowCount:
+        type: integer
+      hideGridlines:
+        type: boolean
+      rowCount:
+        type: integer
+      rowGroupControlAfter:
+        type: boolean
+    type: object
+  responses.GridRange:
+    properties:
+      endColumnIndex:
+        type: integer
+      endRowIndex:
+        type: integer
+      sheetId:
+        type: integer
+      startColumnIndex:
+        type: integer
+      startRowIndex:
+        type: integer
+    type: object
+  responses.HistogramChartSpec:
+    properties:
+      bucketSize:
+        type: number
+      legendPosition:
+        type: string
+      outlierPercentile:
+        type: number
+      series:
+        items:
+          $ref: '#/definitions/responses.HistogramSeries'
+        type: array
+      showItemDividers:
+        type: boolean
+    type: object
+  responses.HistogramRule:
+    properties:
+      end:
+        type: number
+      interval:
+        type: number
+      start:
+        type: number
+    type: object
+  responses.HistogramSeries:
+    properties:
+      barColor:
+        $ref: '#/definitions/responses.Color'
+      barColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      data:
+        $ref: '#/definitions/responses.ChartData'
+    type: object
+  responses.InterpolationPoint:
+    properties:
+      color:
+        $ref: '#/definitions/responses.Color'
+      colorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      type:
+        type: string
+      value:
+        type: string
+    type: object
+  responses.Interval:
+    properties:
+      endTime:
+        type: string
+      startTime:
+        type: string
+    type: object
+  responses.IterativeCalculationSettings:
+    properties:
+      convergenceThreshold:
+        type: number
+      maxIterations:
+        type: integer
+    type: object
+  responses.KeyValueFormat:
+    properties:
+      position:
+        $ref: '#/definitions/responses.TextPosition'
+      textFormat:
+        $ref: '#/definitions/responses.TextFormat'
+    type: object
+  responses.LineStyle:
+    properties:
+      type:
+        type: string
+      width:
+        type: integer
+    type: object
+  responses.Link:
+    properties:
+      uri:
+        type: string
+    type: object
+  responses.LookerDataSourceSpec:
+    properties:
+      explore:
+        type: string
+      instanceUri:
+        type: string
+      model:
+        type: string
+    type: object
+  responses.ManualRule:
+    properties:
+      groups:
+        items:
+          $ref: '#/definitions/responses.ManualRuleGroup'
+        type: array
+    type: object
+  responses.ManualRuleGroup:
+    properties:
+      groupName:
+        $ref: '#/definitions/responses.ExtendedValue'
+      items:
+        items:
+          $ref: '#/definitions/responses.ExtendedValue'
+        type: array
+    type: object
+  responses.NamedRange:
+    properties:
+      name:
+        type: string
+      namedRangeId:
+        type: string
+      range:
+        $ref: '#/definitions/responses.GridRange'
+    type: object
+  responses.NumberFormat:
+    properties:
+      pattern:
+        type: string
+      type:
+        type: string
+    type: object
+  responses.OrgChartSpec:
+    properties:
+      labels:
+        $ref: '#/definitions/responses.ChartData'
+      nodeColor:
+        $ref: '#/definitions/responses.Color'
+      nodeColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      nodeSize:
+        type: string
+      parentLabels:
+        $ref: '#/definitions/responses.ChartData'
+      selectedNodeColor:
+        $ref: '#/definitions/responses.Color'
+      selectedNodeColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      tooltips:
+        $ref: '#/definitions/responses.ChartData'
+    type: object
+  responses.OverlayPosition:
+    properties:
+      anchorCell:
+        $ref: '#/definitions/responses.GridCoordinate'
+      heightPixels:
+        type: integer
+      offsetXPixels:
+        type: integer
+      offsetYPixels:
+        type: integer
+      widthPixels:
+        type: integer
+    type: object
+  responses.Padding:
+    properties:
+      bottom:
+        type: integer
+      left:
+        type: integer
+      right:
+        type: integer
+      top:
+        type: integer
+    type: object
+  responses.PieChartSpec:
+    properties:
+      domain:
+        $ref: '#/definitions/responses.ChartData'
+      legendPosition:
+        type: string
+      pieHole:
+        type: number
+      series:
+        $ref: '#/definitions/responses.ChartData'
+      threeDimensional:
+        type: boolean
+    type: object
+  responses.PivotFilterCriteria:
+    properties:
+      condition:
+        $ref: '#/definitions/responses.BooleanCondition'
+      visibleByDefault:
+        type: boolean
+      visibleValues:
+        items:
+          type: string
+        type: array
+    type: object
+  responses.PivotFilterSpec:
+    properties:
+      columnOffsetIndex:
+        type: integer
+      dataSourceColumnReference:
+        $ref: '#/definitions/responses.DataSourceColumnReference'
+      filterCriteria:
+        $ref: '#/definitions/responses.PivotFilterCriteria'
+    type: object
+  responses.PivotGroup:
+    properties:
+      dataSourceColumnReference:
+        $ref: '#/definitions/responses.DataSourceColumnReference'
+      groupLimit:
+        $ref: '#/definitions/responses.PivotGroupLimit'
+      groupRule:
+        $ref: '#/definitions/responses.PivotGroupRule'
+      label:
+        type: string
+      repeatHeadings:
+        type: boolean
+      showTotals:
+        type: boolean
+      sortOrder:
+        type: string
+      sourceColumnOffset:
+        type: integer
+      valueBucket:
+        $ref: '#/definitions/responses.PivotGroupSortValueBucket'
+      valueMetadata:
+        items:
+          $ref: '#/definitions/responses.PivotGroupValueMetadata'
+        type: array
+    type: object
+  responses.PivotGroupLimit:
+    properties:
+      applyOrder:
+        type: integer
+      countLimit:
+        type: integer
+    type: object
+  responses.PivotGroupRule:
+    properties:
+      dateTimeRule:
+        $ref: '#/definitions/responses.DateTimeRule'
+      histogramRule:
+        $ref: '#/definitions/responses.HistogramRule'
+      manualRule:
+        $ref: '#/definitions/responses.ManualRule'
+    type: object
+  responses.PivotGroupSortValueBucket:
+    properties:
+      buckets:
+        items:
+          $ref: '#/definitions/responses.ExtendedValue'
+        type: array
+      valuesIndex:
+        type: integer
+    type: object
+  responses.PivotGroupValueMetadata:
+    properties:
+      collapsed:
+        type: boolean
+      value:
+        $ref: '#/definitions/responses.ExtendedValue'
+    type: object
+  responses.PivotTable:
+    properties:
+      columns:
+        items:
+          $ref: '#/definitions/responses.PivotGroup'
+        type: array
+      criteria:
+        additionalProperties:
+          $ref: '#/definitions/responses.PivotFilterCriteria'
+        type: object
+      dataExecutionStatus:
+        $ref: '#/definitions/responses.DataExecutionStatus'
+      dataSourceId:
+        type: string
+      filterSpecs:
+        items:
+          $ref: '#/definitions/responses.PivotFilterSpec'
+        type: array
+      rows:
+        items:
+          $ref: '#/definitions/responses.PivotGroup'
+        type: array
+      source:
+        $ref: '#/definitions/responses.GridRange'
+      valueLayout:
+        type: string
+      values:
+        items:
+          $ref: '#/definitions/responses.PivotValue'
+        type: array
+    type: object
+  responses.PivotValue:
+    properties:
+      calculatedDisplayType:
+        type: string
+      dataSourceColumnReference:
+        $ref: '#/definitions/responses.DataSourceColumnReference'
+      formula:
+        type: string
+      name:
+        type: string
+      sourceColumnOffset:
+        type: integer
+      summarizeFunction:
+        type: string
+    type: object
+  responses.PointStyle:
+    properties:
+      shape:
+        type: string
+      size:
+        type: number
+    type: object
+  responses.ProtectedRange:
+    properties:
+      description:
+        type: string
+      editors:
+        $ref: '#/definitions/responses.Editors'
+      namedRangeId:
+        type: string
+      protectedRangeId:
+        type: integer
+      range:
+        $ref: '#/definitions/responses.GridRange'
+      requestingUserCanEdit:
+        type: boolean
+      unprotectedRanges:
+        items:
+          $ref: '#/definitions/responses.GridRange'
+        type: array
+      warningOnly:
+        type: boolean
+    type: object
+  responses.ResponseError:
+    properties:
+      code:
+        type: string
+      detail:
+        type: string
+    type: object
+  responses.RowData:
+    properties:
+      values:
+        items:
+          $ref: '#/definitions/responses.CellData'
+        type: array
+    type: object
+  responses.ScorecardChartSpec:
+    properties:
+      aggregateType:
+        type: string
+      baselineValueData:
+        $ref: '#/definitions/responses.ChartData'
+      baselineValueFormat:
+        $ref: '#/definitions/responses.BaselineValueFormat'
+      customFormatOptions:
+        $ref: '#/definitions/responses.ChartCustomNumberFormatOptions'
+      keyValueData:
+        $ref: '#/definitions/responses.ChartData'
+      keyValueFormat:
+        $ref: '#/definitions/responses.KeyValueFormat'
+      numberFormatSource:
+        type: string
+      scaleFactor:
+        type: number
+    type: object
+  responses.Sheet:
+    properties:
+      bandedRanges:
+        items:
+          $ref: '#/definitions/responses.BandedRange'
+        type: array
+      basicFilter:
+        $ref: '#/definitions/responses.BasicFilter'
+      charts:
+        items:
+          $ref: '#/definitions/responses.EmbeddedChart'
+        type: array
+      columnGroups:
+        items:
+          $ref: '#/definitions/responses.DimensionGroup'
+        type: array
+      conditionalFormats:
+        items:
+          $ref: '#/definitions/responses.ConditionalFormatRule'
+        type: array
+      data:
+        items:
+          $ref: '#/definitions/responses.GridData'
+        type: array
+      developerMetadata:
+        items:
+          $ref: '#/definitions/responses.DeveloperMetadata'
+        type: array
+      filterViews:
+        items:
+          $ref: '#/definitions/responses.FilterView'
+        type: array
+      merges:
+        items:
+          $ref: '#/definitions/responses.GridRange'
+        type: array
+      properties:
+        $ref: '#/definitions/responses.SheetProperties'
+      protectedRanges:
+        items:
+          $ref: '#/definitions/responses.ProtectedRange'
+        type: array
+      rowGroups:
+        items:
+          $ref: '#/definitions/responses.DimensionGroup'
+        type: array
+      slicers:
+        items:
+          $ref: '#/definitions/responses.Slicer'
+        type: array
+    type: object
+  responses.SheetProperties:
+    properties:
+      dataSourceSheetProperties:
+        $ref: '#/definitions/responses.DataSourceSheetProperties'
+      gridProperties:
+        $ref: '#/definitions/responses.GridProperties'
+      hidden:
+        type: boolean
+      index:
+        type: integer
+      rightToLeft:
+        type: boolean
+      sheetId:
+        type: integer
+      sheetType:
+        type: string
+      tabColor:
+        $ref: '#/definitions/responses.Color'
+      tabColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      title:
+        type: string
+    type: object
+  responses.Slicer:
+    properties:
+      position:
+        $ref: '#/definitions/responses.EmbeddedObjectPosition'
+      slicerId:
+        type: integer
+      spec:
+        $ref: '#/definitions/responses.SlicerSpec'
+    type: object
+  responses.SlicerSpec:
+    properties:
+      applyToPivotTables:
+        type: boolean
+      backgroundColor:
+        $ref: '#/definitions/responses.Color'
+      backgroundColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      columnIndex:
+        type: integer
+      dataRange:
+        $ref: '#/definitions/responses.GridRange'
+      filterCriteria:
+        $ref: '#/definitions/responses.FilterCriteria'
+      horizontalAlignment:
+        type: string
+      textFormat:
+        $ref: '#/definitions/responses.TextFormat'
+      title:
+        type: string
+    type: object
+  responses.SortSpec:
+    properties:
+      backgroundColor:
+        $ref: '#/definitions/responses.Color'
+      backgroundColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      dataSourceColumnReference:
+        $ref: '#/definitions/responses.DataSourceColumnReference'
+      dimensionIndex:
+        type: integer
+      foregroundColor:
+        $ref: '#/definitions/responses.Color'
+      foregroundColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      sortOrder:
+        type: string
+    type: object
+  responses.Spreadsheet:
+    properties:
+      dataSourceSchedules:
+        items:
+          $ref: '#/definitions/responses.DataSourceRefreshSchedule'
+        type: array
+      dataSources:
+        items:
+          $ref: '#/definitions/responses.DataSource'
+        type: array
+      developerMetadata:
+        items:
+          $ref: '#/definitions/responses.DeveloperMetadata'
+        type: array
+      namedRanges:
+        items:
+          $ref: '#/definitions/responses.NamedRange'
+        type: array
+      properties:
+        $ref: '#/definitions/responses.SpreadsheetProperties'
+      sheets:
+        items:
+          $ref: '#/definitions/responses.Sheet'
+        type: array
+      spreadsheetId:
+        type: string
+      spreadsheetUrl:
+        type: string
+    type: object
+  responses.SpreadsheetProperties:
+    properties:
+      autoRecalc:
+        type: string
+      defaultFormat:
+        $ref: '#/definitions/responses.CellFormat'
+      importFunctionsExternalUrlAccessAllowed:
+        type: boolean
+      iterativeCalculationSettings:
+        $ref: '#/definitions/responses.IterativeCalculationSettings'
+      locale:
+        type: string
+      spreadsheetTheme:
+        $ref: '#/definitions/responses.SpreadsheetTheme'
+      timeZone:
+        type: string
+      title:
+        type: string
+    type: object
+  responses.SpreadsheetTheme:
+    properties:
+      primaryFontFamily:
+        type: string
+      themeColors:
+        items:
+          $ref: '#/definitions/responses.ThemeColorPair'
+        type: array
+    type: object
+  responses.TextFormat:
+    properties:
+      bold:
+        type: boolean
+      fontFamily:
+        type: string
+      fontSize:
+        type: integer
+      foregroundColor:
+        $ref: '#/definitions/responses.Color'
+      foregroundColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      italic:
+        type: boolean
+      link:
+        $ref: '#/definitions/responses.Link'
+      strikethrough:
+        type: boolean
+      underline:
+        type: boolean
+    type: object
+  responses.TextFormatRun:
+    properties:
+      format:
+        $ref: '#/definitions/responses.TextFormat'
+      startIndex:
+        type: integer
+    type: object
+  responses.TextPosition:
+    properties:
+      horizontalAlignment:
+        type: string
+    type: object
+  responses.TextRotation:
+    properties:
+      angle:
+        type: integer
+      vertical:
+        type: boolean
+    type: object
+  responses.ThemeColorPair:
+    properties:
+      color:
+        $ref: '#/definitions/responses.ColorStyle'
+      colorType:
+        type: string
+    type: object
+  responses.TimeOfDay:
+    properties:
+      hours:
+        type: integer
+      minutes:
+        type: integer
+      nanos:
+        type: integer
+      seconds:
+        type: integer
+    type: object
+  responses.TreemapChartColorScale:
+    properties:
+      maxValueColor:
+        $ref: '#/definitions/responses.Color'
+      maxValueColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      midValueColor:
+        $ref: '#/definitions/responses.Color'
+      midValueColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      minValueColor:
+        $ref: '#/definitions/responses.Color'
+      minValueColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      noDataColor:
+        $ref: '#/definitions/responses.Color'
+      noDataColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+    type: object
+  responses.TreemapChartSpec:
+    properties:
+      colorData:
+        $ref: '#/definitions/responses.ChartData'
+      colorScale:
+        $ref: '#/definitions/responses.TreemapChartColorScale'
+      headerColor:
+        $ref: '#/definitions/responses.Color'
+      headerColorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      hideTooltips:
+        type: boolean
+      hintedLevels:
+        type: integer
+      labels:
+        $ref: '#/definitions/responses.ChartData'
+      levels:
+        type: integer
+      maxValue:
+        type: number
+      minValue:
+        type: number
+      parentLabels:
+        $ref: '#/definitions/responses.ChartData'
+      sizeData:
+        $ref: '#/definitions/responses.ChartData'
+      textFormat:
+        $ref: '#/definitions/responses.TextFormat'
+    type: object
+  responses.WaterfallChartColumnStyle:
+    properties:
+      color:
+        $ref: '#/definitions/responses.Color'
+      colorStyle:
+        $ref: '#/definitions/responses.ColorStyle'
+      label:
+        type: string
+    type: object
+  responses.WaterfallChartCustomSubtotal:
+    properties:
+      dataIsSubtotal:
+        type: boolean
+      label:
+        type: string
+      subtotalIndex:
+        type: integer
+    type: object
+  responses.WaterfallChartDomain:
+    properties:
+      data:
+        $ref: '#/definitions/responses.ChartData'
+      reversed:
+        type: boolean
+    type: object
+  responses.WaterfallChartSeries:
+    properties:
+      customSubtotals:
+        items:
+          $ref: '#/definitions/responses.WaterfallChartCustomSubtotal'
+        type: array
+      data:
+        $ref: '#/definitions/responses.ChartData'
+      dataLabel:
+        $ref: '#/definitions/responses.DataLabel'
+      hideTrailingSubtotal:
+        type: boolean
+      negativeColumnsStyle:
+        $ref: '#/definitions/responses.WaterfallChartColumnStyle'
+      positiveColumnsStyle:
+        $ref: '#/definitions/responses.WaterfallChartColumnStyle'
+      subtotalColumnsStyle:
+        $ref: '#/definitions/responses.WaterfallChartColumnStyle'
+    type: object
+  responses.WaterfallChartSpec:
+    properties:
+      connectorLineStyle:
+        $ref: '#/definitions/responses.LineStyle'
+      domain:
+        $ref: '#/definitions/responses.WaterfallChartDomain'
+      firstValueIsTotal:
+        type: boolean
+      hideConnectorLines:
+        type: boolean
+      series:
+        items:
+          $ref: '#/definitions/responses.WaterfallChartSeries'
+        type: array
+      stackedType:
+        type: string
+      totalDataLabel:
+        $ref: '#/definitions/responses.DataLabel'
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: example@example.com
+    name: Your Name
+    url: http://www.example.com
+  description: This is a sample API for Google Sheets interaction
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://example.com/terms/
+  title: Google Sheets API
+  version: "1.0"
+paths:
+  /api/v1/sheets/capabilities:
+    get:
+      description: Reads ./capabilities.json and returns it parsed as JSON
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Raw JSON
+          schema:
+            type: object
+        "400":
+          description: Invalid JSON
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+        "404":
+          description: File not found
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+      summary: Get capabilities
+      tags:
+      - Utils
+  /api/v1/sheets/clearTable:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint clear table in a Google Sheets document
+      parameters:
+      - description: Sheet ID
+        in: query
+        name: sheet_id
+        required: true
+        type: string
+      - description: Range
+        in: query
+        name: range
+        type: string
+      - description: Delete request payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.DeleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully clear table
+          schema:
+            $ref: '#/definitions/responses.ClearValuesResponse'
+        "400":
+          description: Missing required parameters
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+      summary: ClearTable data from Google Sheets
+      tags:
+      - Sheets
+  /api/v1/sheets/create:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint creates a new table in Google Sheets based on the
+        provided request body
+      parameters:
+      - description: Table Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully created table
+          schema:
+            $ref: '#/definitions/responses.Spreadsheet'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+      summary: Create a new table in Google Sheets
+      tags:
+      - Sheets
+  /api/v1/sheets/read:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint retrieves a specified range of data from a Google
+        Sheets document
+      parameters:
+      - description: Sheet ID
+        in: query
+        name: sheet_id
+        required: true
+        type: string
+      - description: Range
+        in: query
+        name: range
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved data
+          schema:
+            items:
+              items: {}
+              type: array
+            type: array
+        "400":
+          description: Missing Sheet ID or invalid parameters
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+      summary: Get data from Google Sheets
+      tags:
+      - Sheets
+  /api/v1/sheets/share:
+    post:
+      consumes:
+      - application/json
+      description: Grants "reader" permission to a user by email
+      parameters:
+      - description: Share payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ShareRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status + permission
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/responses.ResponseError'
+      summary: Share a Google Sheet (read access)
+      tags:
+      - Sheets
+schemes:
+- http
+swagger: "2.0"

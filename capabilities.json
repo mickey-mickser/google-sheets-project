@@ -1,0 +1,88 @@
+{
+  "service_url": "$SERVICE_URL",
+  "sheet_id": "$SHEET_ID",
+  "endpoints": [
+    {
+      "name": "Capabilities",
+      "method": "GET",
+      "path": "/api/v1/sheets/capabilities",
+      "description": "Return of capabilities and description, requests and response of sheets-service.",
+      "request": {
+        "query": {},
+        "body": null
+      },
+      "curl": "curl -s $SERVICE_URL/api/v1/sheets/capabilities | jq ."
+    },
+    {
+      "name": "Get",
+      "method": "GET",
+      "path": "/api/v1/sheets/read",
+      "description": "Read a range from a Google Sheet.",
+      "request": {
+        "query": {
+          "sheet_id": "$SHEET_ID",
+          "range": "Sheet1!A1:Z100"
+        },
+        "body": null
+      },
+      "curl": "curl -G $SERVICE_URL/api/v1/sheets/read   --data-urlencode sheet_id=$SHEET_ID   --data-urlencode range=A1:C10",
+      "notes": "If range is empty, usecase defaults to A1:Z1000."
+    },
+    {
+      "name": "CreateTable",
+      "method": "POST",
+      "path": "/api/v1/sheets/create",
+      "description": "Create a new spreadsheet.",
+      "request": {
+        "body": {
+          "properties": {
+            "title": "New Spreadsheet"
+          }
+        }
+      },
+      "curl": "curl -X POST $SERVICE_URL/api/v1/sheets/create  -H Content-Type: application/json  -d '{properties:{title:New Spreadsheet}}' | jq ."
+    },
+    {
+      "name": "BatchUpdate",
+      "method": "POST",
+      "path": "/api/v1/sheets/update",
+      "description": "Updates the cell or range of the table to the specified values.",
+      "request": {
+        "query": { "sheet_id": "$SHEET_ID" },
+        "body": {
+          "updates": [
+            { "range": "Sheet1!A1:A10", "value": "Hello" },
+            { "range": "Sheet1!B1", "value": "World" }
+          ]
+        }
+      },
+      "curl": "curl -s -X POST $SERVICE_URL/api/v1/sheets/update?sheet_id=$SHEET_ID -H Content-Type: application/json -d '{updates:[{range:Sheet1!A1:A10,value:Hello},{range:Sheet1!B1,value:World}]}' | jq ."
+    },
+    {
+      "name": "ClearTable",
+      "method": "POST",
+      "path": "/api/v1/sheets/clearTable",
+      "description": "Clear values in the specified range (defaults to entire table).",
+      "request": {
+        "query": { "sheet_id": "$SHEET_ID" },
+        "body": { "range": "A1:C3 (optional, default A1:Z1000)" }
+      },
+      "curl": "curl -s -X POST $SERVICE_URL/api/v1/sheets/clearTable?sheet_id=$SHEET_ID -H Content-Type: application/json -d '{range:A1:C3}' | jq ."
+    },
+    {
+      "name": "Share",
+      "method": "POST",
+      "path": "/api/v1/sheets/share",
+      "description": "Grant reader access to a specific user by email.",
+      "request": {
+        "body": {
+          "email": "example@example.com",
+          "sendEmail": "true(false)",
+          "emailMessage": "string (required if sendEmail=true)"
+        }
+      },
+      "curl": "curl -X POST $SERVICE_URL/api/v1/sheets/share   -H Content-Type: application/json   -d '{email:example@example.com, sendEmail:true, emailMessage:You have read access to the sheet.}' | jq ."
+    }
+  ]
+
+}

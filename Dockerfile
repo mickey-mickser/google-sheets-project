@@ -1,35 +1,50 @@
-# syntax=docker/dockerfile:1
+# Stage 1: Build the Go binary
+FROM golang:1.23.6 AS build
+WORKDIR /app
 
-# Stage for building the application
-ARG GO_VERSION=1.23.6
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION} AS build
-WORKDIR /src
+# Download dependencies
+COPY go.mod go.sum ./
+RUN go mod download -x
 
-RUN --mount=type=cache,target=/go/pkg/mod/ \
-    --mount=type=bind,source=go.sum,target=go.sum \
-    --mount=type=bind,source=go.mod,target=go.mod \
-    go mod download -x
+# Copy all source and configs (service-account-key.json is excluded via .dockerignore)
+COPY . .
 
-ARG TARGETARCH
+# Build the Go application
+RUN CGO_ENABLED=0 GOARCH=amd64 go build -o /bin/docker-service ./cmd
 
-RUN --mount=type=cache,target=/go/pkg/mod/ \
-    --mount=type=bind,target=. \
-    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/server ./cmd/bot/main.go
+# Stage 2: Create minimal runtime image
+FROM alpine:latest AS final
+WORKDIR /app
 
-# Stage for running the application
-FROM alpine:3.17.2 AS final
-
-RUN apk add --no-cache \
-        ca-certificates \
-        tzdata \
+# Install CA certificates and timezone data
+RUN apk update \
+    && apk add --no-cache ca-certificates tzdata \
     && update-ca-certificates
 
-ARG UID=10001
-RUN adduser --disabled-password --gecos "" --home "/nonexistent" --shell "/sbin/nologin" --no-create-home --uid "${UID}" appuser
-USER appuser
+# Copy the compiled binary
+COPY --from=build /bin/docker-service /bin/docker-service
 
-COPY --from=build /bin/server /bin/
+# Copy configs directory (dockerignore ensures no sensitive keys included)
+COPY --from=build /app/configs /configs
 
-EXPOSE 8099
+# Copy .env for local development (ignored in production in favor of environment variables)
+COPY --from=build /app/.env .env
 
-ENTRYPOINT [ "/bin/server" ]
+# Copy JSON capabilities.json
+COPY --from=build /app/capabilities.json /app/capabilities.json
+
+# Create non-root user 'worker'
+RUN adduser --disabled-password --gecos "" \
+    --home "/nonexistent" --shell "/sbin/nologin" \
+    --no-create-home --uid 10001 worker \
+    && chown -R worker:worker /configs .env \
+    && chmod 644 .env
+
+# Switch to non-root user
+USER worker
+
+# Expose application port
+EXPOSE 8080
+
+# Entry point
+ENTRYPOINT ["/bin/docker-service"]
